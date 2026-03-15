@@ -92,7 +92,7 @@ public class UserService {
     }
 
     private void validateNameAndSet(User user) {
-        if(user.getName() == null || user.getName().isBlank()) {
+        if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.info("Имя отсутствует, вместо него установлен логин {}.", user.getLogin());
         }
