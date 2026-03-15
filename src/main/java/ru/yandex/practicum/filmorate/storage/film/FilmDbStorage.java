@@ -205,7 +205,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         String sql = "SELECT * " +
                 "FROM film_genre " +
                 "JOIN genres ON film_genre.genre_id = genres.genre_id " +
-                "WHERE film_id = ?"+
+                "WHERE film_id = ?" +
                 "ORDER BY genres.genre_id";
         try {
             List<Genre> genresList = jdbcTemplate.query(sql, genreRowMapper, filmId);
