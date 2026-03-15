@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
 
 import java.util.Collection;
@@ -20,12 +21,15 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final UserService userService;
     private final MpaDbStorage mpaDbStorage;
-    private final GenreService genreDbStorage;
+    private final GenreDbStorage genreDbStorage;
 
-    public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage, UserService userService, MpaDbStorage mpaDbStorage1, GenreService genreDbStorage) {
+    public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage,
+                       UserService userService,
+                       MpaDbStorage mpaDbStorage,
+                       GenreDbStorage genreDbStorage) {
         this.filmStorage = filmStorage;
         this.userService = userService;
-        this.mpaDbStorage = mpaDbStorage1;
+        this.mpaDbStorage = mpaDbStorage;
         this.genreDbStorage = genreDbStorage;
     }
 
