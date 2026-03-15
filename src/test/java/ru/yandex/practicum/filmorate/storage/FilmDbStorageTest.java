@@ -17,7 +17,6 @@ import ru.yandex.practicum.filmorate.storage.user.UserRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
 
 import javax.sql.DataSource;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -67,7 +66,7 @@ public class FilmDbStorageTest {
         film.setName("Test Film");
         film.setDescription("Test Description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120);
 
         MPA mpa = new MPA();
         mpa.setId(1);

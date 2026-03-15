@@ -59,7 +59,7 @@ public class FilmControllerTest {
         film.setName(name);
         film.setDescription("Description for " + name);
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120);
 
         MPA mpa = new MPA();
         mpa.setId(1);
@@ -105,7 +105,7 @@ public class FilmControllerTest {
         updatedFilm.setName("Updated Film");
         updatedFilm.setDescription("Updated description");
         updatedFilm.setReleaseDate(LocalDate.of(2010, 5, 15));
-        updatedFilm.setDuration(Duration.ofMinutes(150));
+        updatedFilm.setDuration(150);
 
         MPA mpa = new MPA();
         mpa.setId(1);
@@ -139,8 +139,6 @@ public class FilmControllerTest {
 
         filmController.delete(createdFilm.getId());
 
-        assertThrows(RuntimeException.class, () -> {
-            filmController.getFilmById(createdFilm.getId());
-        });
+        assertThrows(RuntimeException.class, () -> filmController.getFilmById(createdFilm.getId()));
     }
 }

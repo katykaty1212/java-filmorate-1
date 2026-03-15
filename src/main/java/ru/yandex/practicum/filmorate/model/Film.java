@@ -36,8 +36,11 @@ public class Film {
     @NotNull
     private MPA mpa;
 
-    @JsonProperty("duration")
-    public long getDurationInMinutes() {
+    public long getDuration() {
         return duration.toMinutes();
+    }
+
+    public void setDuration(long minutes) {
+        this.duration = Duration.ofMinutes(minutes);
     }
 }

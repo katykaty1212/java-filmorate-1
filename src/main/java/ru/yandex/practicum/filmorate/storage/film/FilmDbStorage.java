@@ -45,7 +45,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 film.getName(),
                 film.getDescription(),
                 Date.valueOf(film.getReleaseDate()),
-                film.getDuration().toMinutes(),
+                film.getDuration(),
                 film.getMpa().getId()
         );
 
@@ -81,7 +81,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 newFilm.getName(),
                 newFilm.getDescription(),
                 Date.valueOf(newFilm.getReleaseDate()),
-                newFilm.getDuration().toMinutes(),
+                newFilm.getDuration(),
                 newFilm.getMpa().getId(),
                 newFilm.getId()
         );

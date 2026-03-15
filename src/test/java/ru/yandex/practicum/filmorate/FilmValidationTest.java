@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -32,7 +31,7 @@ public class FilmValidationTest {
         validFilm.setName("Valid Film");
         validFilm.setDescription("Valid description");
         validFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
-        validFilm.setDuration(Duration.ofMinutes(120));
+        validFilm.setDuration(120);
         validFilm.setMpa(mpa);
     }
 
@@ -76,7 +75,7 @@ public class FilmValidationTest {
         Set<ConstraintViolation<Film>> violations = validator.validate(validFilm);
         assertTrue(violations.isEmpty());
 
-        validFilm.setDuration(Duration.ofMinutes(-10));
+        validFilm.setDuration(-10);
         violations = validator.validate(validFilm);
         assertFalse(violations.isEmpty());
     }
