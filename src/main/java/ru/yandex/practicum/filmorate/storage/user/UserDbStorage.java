@@ -5,8 +5,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
 
 import java.util.*;
@@ -99,13 +101,13 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     public Optional<User> getUserById(Long userId) {
         String sql = "SELECT * FROM users WHERE user_id = ?";
 
-        return findOne(sql,userId);
+        return findOne(sql, userId);
     }
 
     public void addFriend(Long userId, Long friendId) {
         String sql = "INSERT INTO friendship (user_id, friend_id, status) VALUES (?, ?, ?)";
 
-        update(sql, userId, friendId, false);
+        update(sql, userId, friendId, true);
         log.info("Пользователь {} подписался на пользователя {}", userId, friendId);
     }
 
@@ -119,8 +121,13 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     public void deleteFriend(Long userId, Long friendId) {
         String sql = "DELETE FROM friendship WHERE user_id = ? AND friend_id = ?";
 
-        update(sql, userId, friendId);
-        log.info("Пользователь {} удалил дружбу с пользователем {}", userId, friendId);
+        int deleteString = jdbcTemplate.update(sql, userId, friendId);
+
+        if (deleteString > 0) {
+            log.info("Пользователь {} удалил дружбу с пользователем {}", userId, friendId);
+        } else {
+            log.info("Дружба между {} и {} не существовала", userId, friendId);
+        }
     }
 
     public List<User> getUserFriends(Long userId) {

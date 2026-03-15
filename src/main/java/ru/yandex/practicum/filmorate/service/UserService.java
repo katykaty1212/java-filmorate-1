@@ -54,19 +54,15 @@ public class UserService {
             throw new ValidationException("Нельзя добавить себя в друзья");
         }
 
+        getUserById(userId);
+        getUserById(friendId);
+
         try {
             userStorage.addFriend(userId, friendId);
         } catch (DuplicateKeyException e) {
             throw new ValidationException("Пользователь с ID " +
                     friendId + " уже в друзьях у пользователя с ID" + userId);
         }
-    }
-
-    public void acceptFriend(Long userId, Long friendId) {
-        getUserById(userId);
-        getUserById(friendId);
-
-        userStorage.acceptFriend(userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
