@@ -18,7 +18,6 @@ import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserRowMapper;
 
 import javax.sql.DataSource;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collection;
 
@@ -90,7 +89,7 @@ public class FilmControllerTest {
 
         assertNotNull(createdFilm.getId());
         assertEquals("Valid Film", createdFilm.getName());
-        assertEquals(Duration.ofMinutes(120), createdFilm.getDuration());
+        assertEquals(120, createdFilm.getDuration());
         assertNotNull(createdFilm.getMpa());
     }
 
@@ -117,7 +116,7 @@ public class FilmControllerTest {
         assertEquals("Updated Film", resultFilm.getName());
         assertEquals("Updated description", resultFilm.getDescription());
         assertEquals(LocalDate.of(2010, 5, 15), resultFilm.getReleaseDate());
-        assertEquals(Duration.ofMinutes(150), resultFilm.getDuration());
+        assertEquals(150, resultFilm.getDuration());
     }
 
     @Test
