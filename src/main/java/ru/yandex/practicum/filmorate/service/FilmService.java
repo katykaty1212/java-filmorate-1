@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
 
 import java.util.Collection;
 import java.util.List;
@@ -17,13 +19,34 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserService userService;
+    private final MpaDbStorage mpaDbStorage;
+    private final GenreService genreDbStorage;
 
-    public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage, UserService userService) {
+    public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage, UserService userService, MpaDbStorage mpaDbStorage1, GenreService genreDbStorage) {
         this.filmStorage = filmStorage;
         this.userService = userService;
+        this.mpaDbStorage = mpaDbStorage1;
+        this.genreDbStorage = genreDbStorage;
     }
 
     public Film create(Film film) {
+
+        try {
+            mpaDbStorage.findById(film.getMpa().getId());
+        } catch (NotFoundException e) {
+            throw new NotFoundException("MPA с id " + film.getMpa().getId() + " не найден");
+        }
+
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            for (Genre genre : film.getGenres()) {
+                try {
+                    genreDbStorage.findById(genre.getId());
+                } catch (NotFoundException e) {
+                    throw new NotFoundException("Жанр с id " + genre.getId() + " не найден");
+                }
+            }
+        }
+
         return filmStorage.create(film);
     }
 

@@ -8,11 +8,13 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.GenreService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
 import ru.yandex.practicum.filmorate.storage.genre.GenreRowMapper;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaRowMapper;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserRowMapper;
@@ -28,6 +30,8 @@ public class FilmControllerTest {
     private FilmController filmController;
     private FilmDbStorage filmStorage;
     private UserDbStorage userStorage;
+    private MpaDbStorage mpaDbStorage;
+    private GenreService genreDbStorage;
 
     @BeforeEach
     void setUp() {
@@ -49,7 +53,7 @@ public class FilmControllerTest {
         userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
 
         UserService userService = new UserService(userStorage);
-        FilmService filmService = new FilmService(filmStorage, userService);
+        FilmService filmService = new FilmService(filmStorage, userService, mpaDbStorage, genreDbStorage);
         filmController = new FilmController(filmService);
     }
 
