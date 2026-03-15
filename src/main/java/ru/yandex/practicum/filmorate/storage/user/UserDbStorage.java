@@ -5,10 +5,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
-import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
 
 import java.util.*;
@@ -109,13 +107,6 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
         update(sql, userId, friendId, true);
         log.info("Пользователь {} подписался на пользователя {}", userId, friendId);
-    }
-
-    public void acceptFriend(Long userId, Long friendId) {
-        String sql = "UPDATE friendship SET status = ? WHERE user_id = ? AND friend_id = ?";
-
-        update(sql, true, friendId, userId); // true = CONFIRMED
-        log.info("Пользователь {} подтвердил заявку от пользователя {}", userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
