@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS films (
     name VARCHAR(200) NOT NULL,
     description VARCHAR (200),
     release_date DATE NOT NULL,
-    duration INTEGER NOT NULL,
+    duration BIGINT NOT NULL,
     mpa_id INTEGER NOT NULL,
     FOREIGN KEY (mpa_id) REFERENCES mpa(mpa_id)
     );
