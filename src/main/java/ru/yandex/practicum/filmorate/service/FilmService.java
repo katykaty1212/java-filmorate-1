@@ -34,20 +34,11 @@ public class FilmService {
     }
 
     public Film create(Film film) {
-
-        try {
-            mpaDbStorage.findById(film.getMpa().getId());
-        } catch (NotFoundException e) {
-            throw new NotFoundException("MPA с id " + film.getMpa().getId() + " не найден");
-        }
+        mpaDbStorage.findById(film.getMpa().getId());
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             for (Genre genre : film.getGenres()) {
-                try {
-                    genreDbStorage.findById(genre.getId());
-                } catch (NotFoundException e) {
-                    throw new NotFoundException("Жанр с id " + genre.getId() + " не найден");
-                }
+                genreDbStorage.findById(genre.getId());
             }
         }
 
