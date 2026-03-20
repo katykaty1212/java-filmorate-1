@@ -50,3 +50,23 @@ CREATE TABLE IF NOT EXISTS friendship (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
         FOREIGN KEY (friend_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS reviews (
+    review_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    content VARCHAR(1000) NOT NULL,
+    is_positive BOOLEAN NOT NULL,
+    user_id BIGINT NOT NULL,
+    film_id BIGINT NOT NULL,
+    useful INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS review_reactions (
+    review_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    is_like BOOLEAN NOT NULL,
+    PRIMARY KEY (review_id, user_id),
+    FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
