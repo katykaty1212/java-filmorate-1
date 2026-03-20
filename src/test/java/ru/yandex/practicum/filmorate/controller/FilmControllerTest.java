@@ -1,8 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -19,7 +21,6 @@ import ru.yandex.practicum.filmorate.storage.mpa.MpaRowMapper;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserRowMapper;
 
-import javax.sql.DataSource;
 import java.time.LocalDate;
 import java.util.Collection;
 
@@ -30,16 +31,27 @@ public class FilmControllerTest {
     private FilmController filmController;
     private FilmDbStorage filmStorage;
     private UserDbStorage userStorage;
+    private JdbcTemplate jdbcTemplate;
+    private EmbeddedDatabase embeddedDatabase;
 
     @BeforeEach
     void setUp() {
-        DataSource dataSource = new EmbeddedDatabaseBuilder()
+        embeddedDatabase = new EmbeddedDatabaseBuilder()
                 .setType(EmbeddedDatabaseType.H2)
                 .addScript("classpath:schema.sql")
                 .addScript("classpath:data.sql")
                 .build();
 
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        jdbcTemplate = new JdbcTemplate(embeddedDatabase);
+
+        jdbcTemplate.execute("DELETE FROM friendship");
+        jdbcTemplate.execute("DELETE FROM likes");
+        jdbcTemplate.execute("DELETE FROM film_genre");
+        jdbcTemplate.execute("DELETE FROM films");
+        jdbcTemplate.execute("DELETE FROM users");
+
+        jdbcTemplate.execute("ALTER TABLE films ALTER COLUMN film_id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN user_id RESTART WITH 1");
 
         FilmRowMapper filmRowMapper = new FilmRowMapper();
         MpaRowMapper mpaRowMapper = new MpaRowMapper();
@@ -55,6 +67,11 @@ public class FilmControllerTest {
         UserService userService = new UserService(userStorage);
         FilmService filmService = new FilmService(filmStorage, userService, mpaDbStorage, genreDbStorage);
         filmController = new FilmController(filmService);
+    }
+
+    @AfterEach
+    void tearDown() {
+        embeddedDatabase.shutdown();
     }
 
     private Film createTestFilm(String name) {
