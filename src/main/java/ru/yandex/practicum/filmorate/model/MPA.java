@@ -1,0 +1,11 @@
+package ru.yandex.practicum.filmorate.model;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+@Data
+public class MPA {
+    private Integer id;
+    @NotBlank
+    private String name;
+}
