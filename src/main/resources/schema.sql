@@ -48,5 +48,18 @@ CREATE TABLE IF NOT EXISTS friendship (
     status BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (user_id, friend_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-        FOREIGN KEY (friend_id) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (friend_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS directors (
+director_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+name VARCHAR(200) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS film_director (
+film_id BIGINT NOT NULL,
+director_id BIGINT NOT NULL,
+PRIMARY KEY (film_id, director_id),
+FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
+FOREIGN KEY (director_id) REFERENCES directors(director_id) ON DELETE CASCADE,
 );
