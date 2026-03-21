@@ -181,6 +181,40 @@ public class ReviewControllerTest {
     }
 
     @Test
+    public void deleteLikeTest() {
+        User author = createTestUser("delete-like-author@mail.ru", "deleteLikeAuthor");
+        User likeUser = createTestUser("delete-like-user@mail.ru", "deleteLikeUser");
+        Film film = createTestFilm("Delete like review film");
+
+        Review createdReview = reviewController.create(createTestReview(author.getId(), film.getId(), "Лайк для удаления", true));
+
+        reviewController.addLike(createdReview.getReviewId(), likeUser.getId());
+        assertEquals(1, reviewController.getReviewById(createdReview.getReviewId()).getUseful());
+
+        reviewController.deleteLike(createdReview.getReviewId(), likeUser.getId());
+
+        Review foundReview = reviewController.getReviewById(createdReview.getReviewId());
+        assertEquals(0, foundReview.getUseful());
+    }
+
+    @Test
+    public void deleteDislikeTest() {
+        User author = createTestUser("delete-dislike-author@mail.ru", "deleteDislikeAuthor");
+        User dislikeUser = createTestUser("delete-dislike-user@mail.ru", "deleteDislikeUser");
+        Film film = createTestFilm("Delete dislike review film");
+
+        Review createdReview = reviewController.create(createTestReview(author.getId(), film.getId(), "Дизлайк для удаления", true));
+
+        reviewController.addDislike(createdReview.getReviewId(), dislikeUser.getId());
+        assertEquals(-1, reviewController.getReviewById(createdReview.getReviewId()).getUseful());
+
+        reviewController.deleteDislike(createdReview.getReviewId(), dislikeUser.getId());
+
+        Review foundReview = reviewController.getReviewById(createdReview.getReviewId());
+        assertEquals(0, foundReview.getUseful());
+    }
+
+    @Test
     public void getReviewsByFilmSortedByUsefulTest() {
         User author = createTestUser("sorted-author@mail.ru", "sortedAuthor");
         User likeUser = createTestUser("sorted-like@mail.ru", "sortedLike");
@@ -196,5 +230,42 @@ public class ReviewControllerTest {
         assertEquals(2, reviews.size());
         assertEquals(secondReview.getReviewId(), reviews.get(0).getReviewId());
         assertEquals(firstReview.getReviewId(), reviews.get(1).getReviewId());
+    }
+
+    @Test
+    public void getAllReviewsWithDefaultCountTest() {
+        User author = createTestUser("all-reviews-author@mail.ru", "allReviewsAuthor");
+        User likeUser = createTestUser("all-reviews-like@mail.ru", "allReviewsLike");
+        Film firstFilm = createTestFilm("All reviews first film");
+        Film secondFilm = createTestFilm("All reviews second film");
+
+        for (int i = 1; i <= 9; i++) {
+            reviewController.create(createTestReview(author.getId(), firstFilm.getId(), "Отзыв " + i, true));
+        }
+
+        Review likedReview = reviewController.create(createTestReview(author.getId(), secondFilm.getId(), "Отзыв с лайком", true));
+        Review skippedReview = reviewController.create(createTestReview(author.getId(), secondFilm.getId(), "Лишний отзыв", true));
+
+        reviewController.addLike(likedReview.getReviewId(), likeUser.getId());
+
+        List<Review> reviews = reviewController.getReviews(null, null);
+
+        boolean likedReviewFound = false;
+        boolean skippedReviewFound = false;
+
+        for (Review review : reviews) {
+            if (review.getReviewId().equals(likedReview.getReviewId())) {
+                likedReviewFound = true;
+            }
+
+            if (review.getReviewId().equals(skippedReview.getReviewId())) {
+                skippedReviewFound = true;
+            }
+        }
+
+        assertEquals(10, reviews.size());
+        assertEquals(likedReview.getReviewId(), reviews.get(0).getReviewId());
+        assertTrue(likedReviewFound);
+        assertFalse(skippedReviewFound);
     }
 }

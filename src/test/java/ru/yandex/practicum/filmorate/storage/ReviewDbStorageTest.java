@@ -168,6 +168,42 @@ public class ReviewDbStorageTest {
     }
 
     @Test
+    void shouldDeleteLike() {
+        User author = createTestUser("delete-like-storage-author@mail.ru", "deleteLikeStorageAuthor");
+        User likeUser = createTestUser("delete-like-storage-user@mail.ru", "deleteLikeStorageUser");
+        Film film = createTestFilm("Delete like storage film");
+
+        Review createdReview = reviewStorage.create(createTestReview(author.getId(), film.getId(), "Лайк для удаления", true));
+
+        reviewStorage.addLike(createdReview.getReviewId(), likeUser.getId());
+        assertEquals(1, reviewStorage.getReviewById(createdReview.getReviewId()).get().getUseful());
+
+        reviewStorage.deleteLike(createdReview.getReviewId(), likeUser.getId());
+
+        Optional<Review> foundReview = reviewStorage.getReviewById(createdReview.getReviewId());
+        assertTrue(foundReview.isPresent());
+        assertEquals(0, foundReview.get().getUseful());
+    }
+
+    @Test
+    void shouldDeleteDislike() {
+        User author = createTestUser("delete-dislike-storage-author@mail.ru", "deleteDislikeStorageAuthor");
+        User dislikeUser = createTestUser("delete-dislike-storage-user@mail.ru", "deleteDislikeStorageUser");
+        Film film = createTestFilm("Delete dislike storage film");
+
+        Review createdReview = reviewStorage.create(createTestReview(author.getId(), film.getId(), "Дизлайк для удаления", true));
+
+        reviewStorage.addDislike(createdReview.getReviewId(), dislikeUser.getId());
+        assertEquals(-1, reviewStorage.getReviewById(createdReview.getReviewId()).get().getUseful());
+
+        reviewStorage.deleteDislike(createdReview.getReviewId(), dislikeUser.getId());
+
+        Optional<Review> foundReview = reviewStorage.getReviewById(createdReview.getReviewId());
+        assertTrue(foundReview.isPresent());
+        assertEquals(0, foundReview.get().getUseful());
+    }
+
+    @Test
     void shouldGetReviewsByFilmSortedByUseful() {
         User author = createTestUser("sorted-storage-author@mail.ru", "sortedStorageAuthor");
         User likeUser = createTestUser("sorted-storage-like@mail.ru", "sortedStorageLike");
@@ -183,5 +219,42 @@ public class ReviewDbStorageTest {
         assertEquals(2, reviews.size());
         assertEquals(secondReview.getReviewId(), reviews.get(0).getReviewId());
         assertEquals(firstReview.getReviewId(), reviews.get(1).getReviewId());
+    }
+
+    @Test
+    void shouldGetAllReviewsWithoutFilmId() {
+        User author = createTestUser("all-storage-author@mail.ru", "allStorageAuthor");
+        User likeUser = createTestUser("all-storage-like@mail.ru", "allStorageLike");
+        Film firstFilm = createTestFilm("All storage first film");
+        Film secondFilm = createTestFilm("All storage second film");
+
+        for (int i = 1; i <= 9; i++) {
+            reviewStorage.create(createTestReview(author.getId(), firstFilm.getId(), "Отзыв " + i, true));
+        }
+
+        Review likedReview = reviewStorage.create(createTestReview(author.getId(), secondFilm.getId(), "Отзыв с лайком", true));
+        Review skippedReview = reviewStorage.create(createTestReview(author.getId(), secondFilm.getId(), "Лишний отзыв", true));
+
+        reviewStorage.addLike(likedReview.getReviewId(), likeUser.getId());
+
+        List<Review> reviews = reviewStorage.getReviews(null, 10);
+
+        boolean likedReviewFound = false;
+        boolean skippedReviewFound = false;
+
+        for (Review review : reviews) {
+            if (review.getReviewId().equals(likedReview.getReviewId())) {
+                likedReviewFound = true;
+            }
+
+            if (review.getReviewId().equals(skippedReview.getReviewId())) {
+                skippedReviewFound = true;
+            }
+        }
+
+        assertEquals(10, reviews.size());
+        assertEquals(likedReview.getReviewId(), reviews.get(0).getReviewId());
+        assertTrue(likedReviewFound);
+        assertFalse(skippedReviewFound);
     }
 }
