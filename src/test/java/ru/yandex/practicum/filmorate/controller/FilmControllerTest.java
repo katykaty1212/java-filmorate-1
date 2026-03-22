@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
@@ -46,10 +47,11 @@ public class FilmControllerTest {
         GenreRowMapper genreRowMapper = new GenreRowMapper();
         UserRowMapper userRowMapper = new UserRowMapper();
         FriendshipRowMapper friendshipRowMapper = new FriendshipRowMapper();
+        DirectorRowMapper directorRowMapper = new DirectorRowMapper();
 
         MpaDbStorage mpaDbStorage = new MpaDbStorage(jdbcTemplate, mpaRowMapper);  // добавить
         GenreDbStorage genreDbStorage = new GenreDbStorage(jdbcTemplate, genreRowMapper);  // добавить
-        filmStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper);
+        filmStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper, directorRowMapper);
         userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
 
         UserService userService = new UserService(userStorage);

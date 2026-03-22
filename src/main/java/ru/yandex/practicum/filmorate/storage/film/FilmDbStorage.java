@@ -10,10 +10,12 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
+import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.genre.GenreRowMapper;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaRowMapper;
 
@@ -26,14 +28,17 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     private final MpaRowMapper mpaRowMapper;
     private final GenreRowMapper genreRowMapper;
+    private final DirectorRowMapper directorRowMapper;
 
     public FilmDbStorage(JdbcTemplate jdbcTemplate,
                          FilmRowMapper filmRowMapper,
                          MpaRowMapper mpaRowMapper,
-                         GenreRowMapper genreRowMapper) {
+                         GenreRowMapper genreRowMapper,
+                         DirectorRowMapper directorRowMapper) {
         super(jdbcTemplate, filmRowMapper);
         this.mpaRowMapper = mpaRowMapper;
         this.genreRowMapper = genreRowMapper;
+        this.directorRowMapper = directorRowMapper;
     }
 
     @Override
@@ -59,6 +64,16 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 update(sqlGenres, film.getId(), genre.getId());
             }
             log.info("Для фильма ID {} добавлено жанров: {}", id, film.getGenres().size());
+        }
+
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            String sqlDirectors = "INSERT INTO film_director (film_id, director_id) VALUES (?, ?)";
+
+            for (Director director : film.getDirectors()) {
+                update(sqlDirectors, film.getId(), director.getId());
+            }
+
+            log.info("Для фильма ID {} добавлено режиссеров: {}", id, film.getDirectors().size());
         }
 
         Film savedFilm = loadFilmData(film);
@@ -215,6 +230,23 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         } catch (DataAccessException e) {
             log.error("Ошибка загрузки жанров для фильма id {}: {}", filmId, e.getMessage());
             return new HashSet<>();
+        }
+    }
+
+    private List<Director> directorsLoad(Long filmId) {
+        String sql = "SELECT * " +
+                "FROM film_director " +
+                "JOIN directors ON film_director.director_id = directors.director_id" +
+                "WHERE film_id = ?";
+
+        try {
+            List<Director> directorList = jdbcTemplate.query(sql, directorRowMapper, filmId);
+            log.info("Загружено {} режиссеров для фильма с ID: {}", directorList.size(), filmId);
+
+            return directorList;
+        } catch (DataAccessException e) {
+            log.error("Ошибка загрузки режиссеров для фильма id {}: {}", filmId, e.getMessage());
+            return Collections.emptyList();
         }
     }
 

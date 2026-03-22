@@ -42,13 +42,24 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
     }
 
     @Override
-    public Director update(Director director) {
-        return null;
+    public Director update(Director newDirector) {
+        String sql = "UPDATE director SET name = ? WHERE director_id = ?";
+
+        update(sql, newDirector.getName(),newDirector.getId());
+        log.info("Обновлён режиссер с ID: {}", newDirector.getId());
+
+        return newDirector;
     }
 
     @Override
     public Director delete(Long directorId) {
-        return null;
+        String sql = "DELETE FROM directors WHERE director_id = ?";
+        Director delDirector = findById(directorId); // проверка существования режиссера
+
+        update(sql, directorId);
+        log.info("Режиссер с ID: {} удален.", directorId);
+
+        return delDirector;
     }
 
     @Override

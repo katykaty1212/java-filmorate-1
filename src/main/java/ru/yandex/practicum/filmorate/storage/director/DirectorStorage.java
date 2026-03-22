@@ -10,7 +10,7 @@ public interface DirectorStorage {
 
     Director create(Director director);
 
-    Director update(Director director);
+    Director update(Director newDirector);
 
     Director delete(Long directorId);
 

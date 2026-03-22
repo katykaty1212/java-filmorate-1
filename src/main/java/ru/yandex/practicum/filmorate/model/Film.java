@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.annotation.ReleaseDate;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -34,6 +35,8 @@ public class Film {
 
     @NotNull
     private MPA mpa;
+
+    private List<Director> directors;
 
     public long getDuration() {
         return duration.toMinutes();
