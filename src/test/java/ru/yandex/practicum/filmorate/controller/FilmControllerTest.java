@@ -7,6 +7,7 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.service.DirectorService;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
@@ -31,6 +32,7 @@ public class FilmControllerTest {
     private FilmController filmController;
     private FilmDbStorage filmStorage;
     private UserDbStorage userStorage;
+    private DirectorService directorService;
 
     @BeforeEach
     void setUp() {
@@ -55,7 +57,7 @@ public class FilmControllerTest {
         userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
 
         UserService userService = new UserService(userStorage);
-        FilmService filmService = new FilmService(filmStorage, userService, mpaDbStorage, genreDbStorage);
+        FilmService filmService = new FilmService(filmStorage, userService, directorService, mpaDbStorage, genreDbStorage);
         filmController = new FilmController(filmService);
     }
 
