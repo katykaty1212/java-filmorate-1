@@ -25,4 +25,6 @@ public interface FilmStorage {
     Set<Long> getLikes(Long filmId);
 
     List<Film> getPopularFilms(Long count);
+
+    List<Film> allFilmsByDirector(Long directorId, String sortBy);
 }

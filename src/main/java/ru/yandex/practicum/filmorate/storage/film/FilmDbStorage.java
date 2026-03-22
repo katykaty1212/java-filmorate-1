@@ -10,6 +10,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -257,10 +258,46 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         Set<Genre> genresFilm = genresLoad(film.getId());
         film.setGenres(genresFilm);
 
+        List<Director> directorsFilm = directorsLoad(film.getId());
+        film.setDirectors(directorsFilm);
+
         log.info("Добавлены МРА и жанры.");
 
         return film;
     }
 
+    public List<Film> allFilmsByDirector(Long directorId, String sortBy) {
 
+        switch (sortBy) {
+            case "likes" -> {
+                return sortedFilmDirectorBByLikes(directorId);
+            }
+            case "year" -> {
+                return sortedFilmDirectorByReleaseDate(directorId);
+            }
+            default -> throw new ValidationException("Не верный запрос сортировки фильмов.");
+        }
+
+    }
+
+    private List<Film> sortedFilmDirectorByReleaseDate(Long director_id) {
+        String sql = "SELECT f.* FROM films f " +
+                "JOIN film_director fd ON f.film_id = fd.film_id  " +
+                "WHERE director_id = ? " +
+                "ORDER BY f.release_date DESC";
+
+        return findMany(sql, director_id);
+    }
+
+    private List<Film> sortedFilmDirectorBByLikes(Long directorId) {
+        String sql = "SELECT f.* COUNT (l.user_id) AS likes_count" +
+                "FROM films f " +
+                "JOIN film_director fd ON f.film_id = fd.film_id " +
+                "JOIN likes l ON f.film_id = l.film_id  " +
+                "WHERE director_id = ? " +
+                "GROUP BY f.film_id" +
+                "ORDER BY likes_count DESC";
+
+        return findMany(sql, directorId);
+    }
 }

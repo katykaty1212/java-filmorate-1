@@ -61,5 +61,5 @@ film_id BIGINT NOT NULL,
 director_id BIGINT NOT NULL,
 PRIMARY KEY (film_id, director_id),
 FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
-FOREIGN KEY (director_id) REFERENCES directors(director_id) ON DELETE CASCADE,
+FOREIGN KEY (director_id) REFERENCES directors(director_id) ON DELETE CASCADE
 );
