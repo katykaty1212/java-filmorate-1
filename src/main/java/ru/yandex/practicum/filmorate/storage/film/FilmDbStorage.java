@@ -118,11 +118,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }
 
         jdbcTemplate.update("DELETE FROM film_director WHERE film_id = ?", newFilm.getId());
-        
+
         if (newFilm.getDirectors() != null && !newFilm.getDirectors().isEmpty()) {
             String insertDirectorSql = "INSERT INTO film_director (film_id, director_id) VALUES (?, ?)";
             for (Director director : newFilm.getDirectors()) {
-                jdbcTemplate.update(sql, newFilm.getId(), director.getId());
+                jdbcTemplate.update(insertDirectorSql, newFilm.getId(), director.getId());
             }
         }
 
