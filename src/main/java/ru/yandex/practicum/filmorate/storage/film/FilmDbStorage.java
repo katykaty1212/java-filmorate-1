@@ -293,7 +293,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         String sql = "SELECT f.* FROM films f " +
                 "JOIN film_director fd ON f.film_id = fd.film_id  " +
                 "WHERE fd.director_id = ? " +
-                "ORDER BY f.release_date DESC";
+                "ORDER BY f.release_date ASC";
 
         return findMany(sql, director_id);
     }
