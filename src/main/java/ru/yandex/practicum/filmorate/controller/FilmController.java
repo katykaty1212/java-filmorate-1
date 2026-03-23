@@ -49,11 +49,6 @@ public class FilmController {
         filmService.deleteLike(id, userId);
     }
 
-    @GetMapping("/popular")
-    public List<Film> getPopularFilm(@RequestParam(required = false, defaultValue = "10") @Positive Long count) {
-        return filmService.getPopularFilm(count);
-    }
-
     @DeleteMapping("/{id}")
     public Film delete(@PathVariable Long id) {
         return filmService.delete(id);
@@ -65,11 +60,15 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<Film> popularFilmsByGenreAndYear(
-            @RequestParam int genreId,
-            @RequestParam(defaultValue = "5") int limit,
-            @RequestParam int year) {
+    public List<Film> getPopularFilms(
+            @RequestParam(defaultValue = "10") @Positive int count,
+            @RequestParam(required = false) Integer genreId,
+            @RequestParam(required = false) Integer year) {
 
-        return filmService.popularFilmsByGenreAndYear(genreId, limit, year);
+        if (genreId != null && year != null) {
+            return filmService.popularFilmsByGenreAndYear(genreId, count, year);
+        }
+
+        return filmService.getPopularFilm((long) count);
     }
 }

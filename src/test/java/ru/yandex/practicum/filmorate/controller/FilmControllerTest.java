@@ -39,7 +39,7 @@ public class FilmControllerTest {
     private FilmDbStorage filmStorage;
     private UserDbStorage userStorage;
     private DirectorService directorService;
-    UserController userController;
+    private UserController userController;
 
     @BeforeEach
     void setUp() {
@@ -210,7 +210,7 @@ public class FilmControllerTest {
         Collection<Film> filmsFromDb = filmController.findAll();
         assertEquals(7, filmsFromDb.size());
 
-        List<Film> result = filmController.popularFilmsByGenreAndYear(2, 3, 2020);
+        List<Film> result = filmController.getPopularFilms(3, 2, 2020);
 
         assertEquals(3, result.size());
 
@@ -231,6 +231,41 @@ public class FilmControllerTest {
         assertFalse(result.stream().anyMatch(f -> f.getId().equals(film6.getId())));
         assertFalse(result.stream().anyMatch(f -> f.getId().equals(film5.getId())));
 
+    }
+
+    @Test
+    public void getPopularFilmsOnlyCountTest() {
+        Film film1 = createFilmTest("Фильм 5 лайков", 2020, List.of(2));
+        Film film2 = createFilmTest("Фильм 3 лайка", 2020, List.of(2));
+        Film film3 = createFilmTest("Фильм 1 лайк", 2020, List.of(2));
+        Film film4 = createFilmTest("Фильм без лайков", 2020, List.of(2));
+
+        User user1 = createUserTest("user1");
+        User user2 = createUserTest("user2");
+        User user3 = createUserTest("user3");
+        User user4 = createUserTest("user4");
+        User user5 = createUserTest("user5");
+
+        filmController.addLike(film1.getId(), user1.getId());
+        filmController.addLike(film1.getId(), user2.getId());
+        filmController.addLike(film1.getId(), user3.getId());
+        filmController.addLike(film1.getId(), user4.getId());
+        filmController.addLike(film1.getId(), user5.getId());
+
+        filmController.addLike(film2.getId(), user1.getId());
+        filmController.addLike(film2.getId(), user2.getId());
+        filmController.addLike(film2.getId(), user3.getId());
+
+        filmController.addLike(film3.getId(), user1.getId());
+
+        List<Film> result = filmController.getPopularFilms(3, null, null);
+
+        // Проверки
+        assertEquals(3, result.size());
+        assertEquals(film1.getId(), result.get(0).getId());
+        assertEquals(film2.getId(), result.get(1).getId());
+        assertEquals(film3.getId(), result.get(2).getId());
+        assertFalse(result.stream().anyMatch(f -> f.getId().equals(film4.getId())));
     }
 
     private Film createFilmTest(String name, int year, List<Integer> genreIds) {
