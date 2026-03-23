@@ -90,4 +90,8 @@ public class FilmService {
         directorService.findById(directorId);
         return filmStorage.allFilmsByDirector(directorId, sortBy);
     }
+
+    public List<Film> popularFilmsByGenreAndYear(int genreId, int limit, int year) {
+        return filmStorage.popularFilmsByGenreAndYear(genreId, limit, year);
+    }
 }

@@ -63,4 +63,13 @@ public class FilmController {
     public List<Film> allFilmsByDirector(@PathVariable Long directorId, @RequestParam String sortBy) {
         return filmService.allFilmsByDirector(directorId, sortBy);
     }
+
+    @GetMapping("/popular")
+    public List<Film> popularFilmsByGenreAndYear(
+            @RequestParam int genreId,
+            @RequestParam(defaultValue = "5") int limit,
+            @RequestParam int year) {
+
+        return filmService.popularFilmsByGenreAndYear(genreId, limit, year);
+    }
 }

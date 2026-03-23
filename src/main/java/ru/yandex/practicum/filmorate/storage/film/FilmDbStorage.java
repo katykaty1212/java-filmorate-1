@@ -368,4 +368,24 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         return films;
     }
+
+    public List<Film> popularFilmsByGenreAndYear(int genreId, int limit, int year) {
+        String sql = "SELECT f.*, COUNT(l.user_id) AS likes_count " +
+                "FROM films f " +
+                "JOIN film_genre fg ON f.film_id = fg.film_id " +
+                "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                "WHERE fg.genre_id = ? AND EXTRACT(YEAR FROM f.release_date) = ? " +
+                "GROUP BY f.film_id " +
+                "ORDER BY likes_count DESC LIMIT ? ";
+
+        try {
+            List<Film> popularFilms = jdbcTemplate.query(sql, mapper, genreId, year, limit);
+            popularFilms.forEach(this::loadFilmData);
+
+            return popularFilms;
+        } catch (EmptyResultDataAccessException e) {
+            log.error("Ошибка при получении популярных фильмов по жанру и году: {}", e.getMessage());
+            return Collections.emptyList();
+        }
+    }
 }
