@@ -235,4 +235,40 @@ public class FilmDbStorageTest {
         assertTrue(filmIds.contains(createdFilm2.getId()));
     }
 
+
+
+    @Test
+    void shouldReturnCommonFilmsSortedByPopularity() {
+        User user1 = userStorage.create(createTestUser());
+        User user2 = userStorage.create(createTestUser());
+        User user3 = userStorage.create(createTestUser());
+        User user4 = userStorage.create(createTestUser());
+
+        Film firstFilm = createTestFilm();
+        firstFilm.setName("First Film");
+        Film secondFilm = createTestFilm();
+        secondFilm.setName("Second Film");
+        Film thirdFilm = createTestFilm();
+        thirdFilm.setName("Third Film");
+
+        Film createdFirstFilm = filmStorage.create(firstFilm);
+        Film createdSecondFilm = filmStorage.create(secondFilm);
+        Film createdThirdFilm = filmStorage.create(thirdFilm);
+
+        filmStorage.addLike(createdFirstFilm.getId(), user1.getId());
+        filmStorage.addLike(createdSecondFilm.getId(), user1.getId());
+
+        filmStorage.addLike(createdFirstFilm.getId(), user2.getId());
+        filmStorage.addLike(createdSecondFilm.getId(), user2.getId());
+
+        filmStorage.addLike(createdFirstFilm.getId(), user3.getId());
+        filmStorage.addLike(createdThirdFilm.getId(), user4.getId());
+
+        List<Film> commonFilms = filmStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertEquals(2, commonFilms.size());
+        assertEquals(createdFirstFilm.getId(), commonFilms.get(0).getId());
+        assertEquals(createdSecondFilm.getId(), commonFilms.get(1).getId());
+    }
+
 }
