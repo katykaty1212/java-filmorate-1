@@ -1,9 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
-
-import java.sql.Date;
-
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -20,7 +17,9 @@ import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.genre.GenreRowMapper;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaRowMapper;
 
+import java.sql.Date;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Qualifier("dbFilmStorage")
@@ -275,6 +274,51 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return film;
     }
 
+    @Override
+    public Set<Long> getLikedFilmIds(Long userId) {
+        String sql = "SELECT film_id FROM likes WHERE user_id = ?";
+        return new HashSet<>(jdbcTemplate.query(
+                sql,
+                (rs, rowNum) -> rs.getLong("film_id"),
+                userId)
+        );
+    }
+
+    @Override
+    public Map<Long, Set<Long>> getAllUserLikes() {
+        String sql = "SELECT user_id, film_id FROM likes";
+
+        return jdbcTemplate.query(sql, rs -> {
+            Map<Long, Set<Long>> userLikes = new HashMap<>();
+            while (rs.next()) {
+                long userId = rs.getLong("user_id");
+                long filmId = rs.getLong("film_id");
+                userLikes
+                        .computeIfAbsent(userId, k -> new HashSet<>())
+                        .add(filmId);
+            }
+            return userLikes;
+        });
+    }
+
+    @Override
+    public List<Film> getFilmsByIds(Set<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String sql = "SELECT * FROM films WHERE film_id IN (%s)";
+        String placeholder = ids.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(","));
+        String query = String.format(sql, placeholder);
+
+        List<Film> films = jdbcTemplate.query(query, mapper, ids.toArray());
+
+        films.forEach(this::loadFilmData);
+
+        return films;
+    }
     public List<Film> allFilmsByDirector(Long directorId, String sortBy) {
 
         switch (sortBy) {

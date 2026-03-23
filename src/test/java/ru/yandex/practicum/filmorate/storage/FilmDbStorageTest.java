@@ -11,15 +11,19 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
+import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
 import ru.yandex.practicum.filmorate.storage.genre.GenreRowMapper;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaRowMapper;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserRowMapper;
-import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
 
 import javax.sql.DataSource;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,10 +32,12 @@ public class FilmDbStorageTest {
     private FilmDbStorage filmStorage;
     private UserDbStorage userStorage;
     private JdbcTemplate jdbcTemplate;
+    private int userCounter = 1;
 
     @BeforeEach
     void setUp() {
         DataSource dataSource = new EmbeddedDatabaseBuilder()
+                .generateUniqueName(true)
                 .setType(EmbeddedDatabaseType.H2)
                 .addScript("classpath:schema.sql")
                 .addScript("classpath:data.sql")
@@ -78,10 +84,11 @@ public class FilmDbStorageTest {
 
     private User createTestUser() {
         User user = new User();
-        user.setEmail("test@film.ru");
-        user.setLogin("testlogin");
-        user.setName("Test User");
+        user.setEmail("test" + userCounter + "@film.ru");
+        user.setLogin("testlogin" + userCounter);
+        user.setName("Test User" + userCounter);
         user.setBirthday(LocalDate.of(1990, 1, 1));
+        userCounter++;
         return user;
     }
 
@@ -161,4 +168,71 @@ public class FilmDbStorageTest {
         filmStorage.deleteLike(createdFilm.getId(), createdUser.getId());
         assertFalse(filmStorage.getLikes(createdFilm.getId()).contains(createdUser.getId()));
     }
+
+    @Test
+    void shouldReturnLikedFilmIdsForUser() {
+        User user = createTestUser();
+        User createdUser = userStorage.create(user);
+
+        Film film1 = createTestFilm();
+        Film createdFilm1 = filmStorage.create(film1);
+        Film film2 = createTestFilm();
+        Film createdFilm2 = filmStorage.create(film2);
+
+        filmStorage.addLike(createdFilm1.getId(), createdUser.getId());
+        filmStorage.addLike(createdFilm2.getId(), createdUser.getId());
+
+        Set<Long> likedFilmIds = filmStorage.getLikedFilmIds(createdUser.getId());
+
+        assertNotNull(likedFilmIds);
+        assertEquals(2, likedFilmIds.size());
+        assertTrue(likedFilmIds.contains(createdFilm1.getId()));
+        assertTrue(likedFilmIds.contains(createdFilm2.getId()));
+    }
+
+    @Test
+    void shouldReturnAllUserLikes() {
+        User user1 = createTestUser();
+        User createdUser1 = userStorage.create(user1);
+        User user2 = createTestUser();
+        User createdUser2 = userStorage.create(user2);
+
+        Film film1 = createTestFilm();
+        Film createdFilm1 = filmStorage.create(film1);
+        Film film2 = createTestFilm();
+        Film createdFilm2 = filmStorage.create(film2);
+
+        filmStorage.addLike(createdFilm1.getId(), createdUser1.getId());
+        filmStorage.addLike(createdFilm2.getId(), createdUser1.getId());
+        filmStorage.addLike(createdFilm2.getId(), createdUser2.getId());
+
+        Map<Long, Set<Long>> allUserLikes = filmStorage.getAllUserLikes();
+
+        assertNotNull(allUserLikes);
+        assertEquals(2, allUserLikes.size());
+        assertTrue(allUserLikes.get(createdUser1.getId()).contains(createdFilm1.getId()));
+        assertTrue(allUserLikes.get(createdUser1.getId()).contains(createdFilm2.getId()));
+        assertTrue(allUserLikes.get(createdUser2.getId()).contains(createdFilm2.getId()));
+    }
+
+    @Test
+    void shouldReturnFilmsByIds() {
+        Film film1 = createTestFilm();
+        Film createdFilm1 = filmStorage.create(film1);
+        Film film2 = createTestFilm();
+        Film createdFilm2 = filmStorage.create(film2);
+
+        Set<Long> ids = Set.of(createdFilm1.getId(), createdFilm2.getId());
+
+        List<Film> films = filmStorage.getFilmsByIds(ids);
+        Set<Long> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+
+        assertNotNull(films);
+        assertEquals(2, films.size());
+        assertTrue(filmIds.contains(createdFilm1.getId()));
+        assertTrue(filmIds.contains(createdFilm2.getId()));
+    }
+
 }
