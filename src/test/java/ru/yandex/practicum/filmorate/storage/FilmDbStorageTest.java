@@ -31,6 +31,7 @@ public class FilmDbStorageTest {
     @BeforeEach
     void setUp() {
         DataSource dataSource = new EmbeddedDatabaseBuilder()
+                .generateUniqueName(true)
                 .setType(EmbeddedDatabaseType.H2)
                 .addScript("classpath:schema.sql")
                 .addScript("classpath:data.sql")

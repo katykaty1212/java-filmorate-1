@@ -27,6 +27,7 @@ public class UserControllerTest {
     @BeforeEach
     void setUp() {
         embeddedDatabase = new EmbeddedDatabaseBuilder()
+                .generateUniqueName(true)
                 .setType(EmbeddedDatabaseType.H2)
                 .addScript("classpath:schema.sql")
                 .addScript("classpath:data.sql")
