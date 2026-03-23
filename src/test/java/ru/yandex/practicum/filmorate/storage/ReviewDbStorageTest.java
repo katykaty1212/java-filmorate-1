@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
@@ -62,8 +63,9 @@ public class ReviewDbStorageTest {
         UserRowMapper userRowMapper = new UserRowMapper();
         FriendshipRowMapper friendshipRowMapper = new FriendshipRowMapper();
         ReviewRowMapper reviewRowMapper = new ReviewRowMapper();
+        DirectorRowMapper directorRowMapper = new DirectorRowMapper();
 
-        filmStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper);
+        filmStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper, directorRowMapper);
         userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
         reviewStorage = new ReviewDbStorage(jdbcTemplate, reviewRowMapper);
     }

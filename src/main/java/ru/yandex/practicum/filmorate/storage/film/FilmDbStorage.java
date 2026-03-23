@@ -7,10 +7,13 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
+import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.genre.GenreRowMapper;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaRowMapper;
 
@@ -25,14 +28,17 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     private final MpaRowMapper mpaRowMapper;
     private final GenreRowMapper genreRowMapper;
+    private final DirectorRowMapper directorRowMapper;
 
     public FilmDbStorage(JdbcTemplate jdbcTemplate,
                          FilmRowMapper filmRowMapper,
                          MpaRowMapper mpaRowMapper,
-                         GenreRowMapper genreRowMapper) {
+                         GenreRowMapper genreRowMapper,
+                         DirectorRowMapper directorRowMapper) {
         super(jdbcTemplate, filmRowMapper);
         this.mpaRowMapper = mpaRowMapper;
         this.genreRowMapper = genreRowMapper;
+        this.directorRowMapper = directorRowMapper;
     }
 
     @Override
@@ -58,6 +64,16 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 update(sqlGenres, film.getId(), genre.getId());
             }
             log.info("Для фильма ID {} добавлено жанров: {}", id, film.getGenres().size());
+        }
+
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            String sqlDirectors = "INSERT INTO film_director (film_id, director_id) VALUES (?, ?)";
+
+            for (Director director : film.getDirectors()) {
+                update(sqlDirectors, film.getId(), director.getId());
+            }
+
+            log.info("Для фильма ID {} добавлено режиссеров: {}", id, film.getDirectors().size());
         }
 
         Film savedFilm = loadFilmData(film);
@@ -98,6 +114,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             log.info("Для фильма ID {} добавлено жанров: {}", newFilm.getId(), newFilm.getGenres().size());
         } else {
             log.info("Жанры для фильма ID {} удалены", newFilm.getId());
+        }
+
+        jdbcTemplate.update("DELETE FROM film_director WHERE film_id = ?", newFilm.getId());
+
+        if (newFilm.getDirectors() != null && !newFilm.getDirectors().isEmpty()) {
+            String insertDirectorSql = "INSERT INTO film_director (film_id, director_id) VALUES (?, ?)";
+            for (Director director : newFilm.getDirectors()) {
+                jdbcTemplate.update(insertDirectorSql, newFilm.getId(), director.getId());
+            }
         }
 
         return loadFilmData(newFilm);
@@ -217,12 +242,32 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }
     }
 
+    private List<Director> directorsLoad(Long filmId) {
+        String sql = "SELECT * " +
+                "FROM film_director " +
+                "JOIN directors ON film_director.director_id = directors.director_id " +
+                "WHERE film_id = ?";
+
+        try {
+            List<Director> directorList = jdbcTemplate.query(sql, directorRowMapper, filmId);
+            log.info("Загружено {} режиссеров для фильма с ID: {}", directorList.size(), filmId);
+
+            return directorList;
+        } catch (DataAccessException e) {
+            log.error("Ошибка загрузки режиссеров для фильма id {}: {}", filmId, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
     private Film loadFilmData(Film film) {
         MPA mpaFilm = mpaLoadById(film.getMpa().getId());
         film.setMpa(mpaFilm);
 
         Set<Genre> genresFilm = genresLoad(film.getId());
         film.setGenres(genresFilm);
+
+        List<Director> directorsFilm = directorsLoad(film.getId());
+        film.setDirectors(directorsFilm);
 
         log.info("Добавлены МРА и жанры.");
 
@@ -275,4 +320,52 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return films;
     }
 
+    public List<Film> allFilmsByDirector(Long directorId, String sortBy) {
+
+        switch (sortBy) {
+            case "likes" -> {
+                return sortedFilmDirectorByLikes(directorId);
+            }
+            case "year" -> {
+                return sortedFilmDirectorByReleaseDate(directorId);
+            }
+            default -> throw new ValidationException("Не верный запрос сортировки фильмов.");
+        }
+
+    }
+
+    private List<Film> sortedFilmDirectorByReleaseDate(Long directorId) {
+        String sql = "SELECT f.* FROM films f " +
+                "JOIN film_director fd ON f.film_id = fd.film_id  " +
+                "WHERE fd.director_id = ? " +
+                "ORDER BY f.release_date ASC";
+
+        List<Film> films = findMany(sql, directorId);
+
+        for (Film film : films) {
+            List<Director> directors = directorsLoad(film.getId());
+            film.setDirectors(directors);
+        }
+
+        return films;
+    }
+
+    private List<Film> sortedFilmDirectorByLikes(Long directorId) {
+        String sql = "SELECT f.*, COUNT(l.user_id) AS likes_count " +
+                "FROM films f " +
+                "JOIN film_director fd ON f.film_id = fd.film_id " +
+                "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                "WHERE fd.director_id = ? " +
+                "GROUP BY f.film_id " +
+                "ORDER BY likes_count DESC";
+
+        List<Film> films = findMany(sql, directorId);
+
+        for (Film film : films) {
+            List<Director> directors = directorsLoad(film.getId());
+            film.setDirectors(directors);
+        }
+
+        return films;
+    }
 }

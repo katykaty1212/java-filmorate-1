@@ -28,4 +28,6 @@ public interface FilmStorage {
     Map<Long, Set<Long>> getAllUserLikes();
 
     List<Film> getFilmsByIds(Set<Long> ids);
+
+    List<Film> allFilmsByDirector(Long directorId, String sortBy);
 }

@@ -20,15 +20,17 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserService userService;
+    private final DirectorService directorService;
     private final MpaDbStorage mpaDbStorage;
     private final GenreDbStorage genreDbStorage;
 
     public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage,
-                       UserService userService,
+                       UserService userService, DirectorService directorService,
                        MpaDbStorage mpaDbStorage,
                        GenreDbStorage genreDbStorage) {
         this.filmStorage = filmStorage;
         this.userService = userService;
+        this.directorService = directorService;
         this.mpaDbStorage = mpaDbStorage;
         this.genreDbStorage = genreDbStorage;
     }
@@ -82,5 +84,10 @@ public class FilmService {
 
     public List<Film> getPopularFilm(Long count) {
         return filmStorage.getPopularFilms(count);
+    }
+
+    public List<Film> allFilmsByDirector(Long directorId, String sortBy) {
+        directorService.findById(directorId);
+        return filmStorage.allFilmsByDirector(directorId, sortBy);
     }
 }

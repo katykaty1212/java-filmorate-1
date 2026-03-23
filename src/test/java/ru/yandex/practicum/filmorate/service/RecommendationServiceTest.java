@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.genre.GenreRowMapper;
@@ -44,8 +45,9 @@ public class RecommendationServiceTest {
         FilmRowMapper filmRowMapper = new FilmRowMapper();
         MpaRowMapper mpaRowMapper = new MpaRowMapper();
         GenreRowMapper genreRowMapper = new GenreRowMapper();
+        DirectorRowMapper directorRowMapper = new DirectorRowMapper();
 
-        filmDbStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper);
+        filmDbStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper, directorRowMapper);
         recommendationService = new RecommendationService(filmDbStorage);
 
         jdbcTemplate.update("INSERT INTO USERS (USER_ID, EMAIL, LOGIN, NAME, BIRTHDAY) VALUES (?, ?, ?, ?, ?)",

@@ -8,6 +8,7 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
@@ -61,9 +62,10 @@ public class FilmDbStorageTest {
         GenreRowMapper genreRowMapper = new GenreRowMapper();
         UserRowMapper userRowMapper = new UserRowMapper();
         FriendshipRowMapper friendshipRowMapper = new FriendshipRowMapper();
+        DirectorRowMapper directorRowMapper = new DirectorRowMapper();
 
         // Создаем хранилища
-        filmStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper);
+        filmStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper, directorRowMapper);
         userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
     }
 
