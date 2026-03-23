@@ -41,6 +41,16 @@ public class FilmControllerTest {
 
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
+        // Очищаем таблицы перед каждым тестом
+        jdbcTemplate.execute("DELETE FROM friendship");
+        jdbcTemplate.execute("DELETE FROM likes");
+        jdbcTemplate.execute("DELETE FROM film_genre");
+        jdbcTemplate.execute("DELETE FROM films");
+        jdbcTemplate.execute("DELETE FROM users");
+
+        // Сбрасываем счетчик ID
+        jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN user_id RESTART WITH 1");
+
         FilmRowMapper filmRowMapper = new FilmRowMapper();
         MpaRowMapper mpaRowMapper = new MpaRowMapper();
         GenreRowMapper genreRowMapper = new GenreRowMapper();
