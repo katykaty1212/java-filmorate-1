@@ -368,4 +368,69 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         return films;
     }
+
+    @Override
+    public List<Film> search(String query, String by) {
+        Set<String> options = Set.of(by.split(","));
+
+        if (options.size() == 1) {
+            if (options.contains("title")) {
+                return findByTitle(query);
+            } else {
+                return findByDirector(query);
+            }
+        }
+        return findByTitleAndDirector(query);
+    }
+
+    private List<Film> findByTitleAndDirector(String query) {
+        String sql = """
+                        SELECT f.*, COUNT(l.user_id) AS likes_count
+                        FROM films f
+                        LEFT JOIN film_director fd ON f.film_id = fd.film_id
+                        LEFT JOIN directors d ON d.director_id = fd.director_id
+                        LEFT JOIN likes l ON f.film_id = l.film_id
+                        WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                        OR LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                        GROUP BY f.film_id
+                        ORDER BY likes_count DESC;
+                """;
+
+        return jdbcTemplate.query(sql, mapper, query, query);
+    }
+
+    private List<Film> findByDirector(String query) {
+        String sql = """
+                        SELECT f.*
+                        FROM films f
+                        JOIN film_director fd ON f.film_id = fd.film_id
+                        JOIN directors d ON d.director_id = fd.director_id
+                        WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                        ORDER BY (
+                        SELECT COUNT(*)
+                        FROM likes l
+                        WHERE l.film_id = f.film_id
+                        )
+                        DESC;
+                """;
+
+        return jdbcTemplate.query(sql, mapper, query);
+    }
+
+    private List<Film> findByTitle(String query) {
+        String sql = """
+                SELECT f.*
+                FROM films f
+                WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                ORDER BY (
+                SELECT COUNT(*)
+                FROM likes l
+                WHERE l.film_id = f.film_id
+                )
+                DESC;
+                """;
+
+        return jdbcTemplate.query(sql, mapper, query);
+    }
+
 }
