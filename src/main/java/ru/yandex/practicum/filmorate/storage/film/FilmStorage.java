@@ -30,4 +30,6 @@ public interface FilmStorage {
     List<Film> getFilmsByIds(Set<Long> ids);
 
     List<Film> allFilmsByDirector(Long directorId, String sortBy);
+
+    List<Film> search(String query, String by);
 }
