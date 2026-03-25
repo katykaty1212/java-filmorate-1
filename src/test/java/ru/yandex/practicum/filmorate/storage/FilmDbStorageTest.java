@@ -131,17 +131,6 @@ public class FilmDbStorageTest {
     }
 
     @Test
-    void shouldDeleteFilm() {
-        Film film = createTestFilm();
-        Film created = filmStorage.create(film);
-
-        filmStorage.delete(created.getId());
-
-        Optional<Film> found = filmStorage.getFilmById(created.getId());
-        assertFalse(found.isPresent());
-    }
-
-    @Test
     void shouldAddLike() {
         User user = createTestUser();
         User createdUser = userStorage.create(user);
@@ -233,6 +222,34 @@ public class FilmDbStorageTest {
         assertEquals(2, films.size());
         assertTrue(filmIds.contains(createdFilm1.getId()));
         assertTrue(filmIds.contains(createdFilm2.getId()));
+    }
+
+    @Test
+    void shouldDeleteFilmByIds() {
+        Film film1 = createTestFilm();
+        Film createdFilm1 = filmStorage.create(film1);
+
+        filmStorage.delete(createdFilm1.getId());
+
+        assertTrue(filmStorage.getFilmById(createdFilm1.getId()).isEmpty());
+    }
+
+    @Test
+    void shouldDeleteLikesWhenFilmDeleted() {
+        Film film1 = createTestFilm();
+        Film createdFilm1 = filmStorage.create(film1);
+
+        User user1 = createTestUser();
+        User createdUser1 = userStorage.create(user1);
+
+
+        filmStorage.addLike(createdFilm1.getId(), createdUser1.getId());
+
+        filmStorage.delete(createdFilm1.getId());
+
+        List<Film> popular = filmStorage.getPopularFilms(10L);
+
+        assertTrue(popular.stream().noneMatch(film -> film.getId().equals(createdFilm1.getId())));
     }
 
 }
