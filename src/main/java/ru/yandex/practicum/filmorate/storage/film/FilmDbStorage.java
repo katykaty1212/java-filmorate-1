@@ -218,6 +218,20 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     }
 
+    @Override
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        String sql = "SELECT f.*, " +
+                "(SELECT COUNT(*) FROM likes l WHERE l.film_id = f.film_id) AS likes_count " +
+                "FROM films f " +
+                "WHERE EXISTS (SELECT 1 FROM likes l1 WHERE l1.film_id = f.film_id AND l1.user_id = ?) " +
+                "AND EXISTS (SELECT 1 FROM likes l2 WHERE l2.film_id = f.film_id AND l2.user_id = ?) " +
+                "ORDER BY likes_count DESC, f.film_id";
+
+        List<Film> commonFilms = findMany(sql, userId, friendId);
+        commonFilms.forEach(this::loadFilmData);
+        return commonFilms;
+    }
+
     private Set<Genre> genresLoad(Long filmId) {
         String sql = "SELECT * " +
                 "FROM film_genre " +

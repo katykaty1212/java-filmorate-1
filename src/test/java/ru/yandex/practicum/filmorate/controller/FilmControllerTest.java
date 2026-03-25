@@ -7,6 +7,7 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.DirectorService;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -85,6 +86,16 @@ public class FilmControllerTest {
         return film;
     }
 
+
+    private User createTestUser(String suffix) {
+        User user = new User();
+        user.setEmail("user" + suffix + "@mail.ru");
+        user.setLogin("user" + suffix);
+        user.setName("User " + suffix);
+        user.setBirthday(LocalDate.of(1990, 1, 1));
+        return user;
+    }
+
     @Test
     public void createAndFindAllFilmsTest() {
         Film film1 = createTestFilm("Film One");
@@ -159,4 +170,31 @@ public class FilmControllerTest {
 
         assertThrows(RuntimeException.class, () -> filmController.getFilmById(createdFilm.getId()));
     }
+
+
+    @Test
+    public void getCommonFilmsTest() {
+        User firstUser = userStorage.create(createTestUser("1"));
+        User secondUser = userStorage.create(createTestUser("2"));
+        User thirdUser = userStorage.create(createTestUser("3"));
+
+        Film firstFilm = filmController.create(createTestFilm("First Film"));
+        Film secondFilm = filmController.create(createTestFilm("Second Film"));
+
+        filmController.addLike(firstFilm.getId(), firstUser.getId());
+        filmController.addLike(secondFilm.getId(), firstUser.getId());
+
+        filmController.addLike(firstFilm.getId(), secondUser.getId());
+        filmController.addLike(secondFilm.getId(), secondUser.getId());
+
+        filmController.addLike(firstFilm.getId(), thirdUser.getId());
+
+        Collection<Film> commonFilms = filmController.getCommonFilms(firstUser.getId(), secondUser.getId());
+        Film[] films = commonFilms.toArray(new Film[0]);
+
+        assertEquals(2, commonFilms.size());
+        assertEquals(firstFilm.getId(), films[0].getId());
+        assertEquals(secondFilm.getId(), films[1].getId());
+    }
+
 }
