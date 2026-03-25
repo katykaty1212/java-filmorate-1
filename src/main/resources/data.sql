@@ -12,8 +12,3 @@ MERGE INTO genres (genre_id, name) KEY (genre_id) VALUES
     (4, 'Триллер'),
     (5, 'Документальный'),
     (6, 'Боевик');
-
-DELETE FROM likes;
-DELETE FROM film_genre;
-DELETE FROM films;
-DELETE FROM users;
