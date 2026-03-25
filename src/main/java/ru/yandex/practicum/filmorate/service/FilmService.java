@@ -115,4 +115,18 @@ public class FilmService {
         }
     }
 
+
+    public List<Film> popularFilmsByGenreAndYear(int genreId, int limit, int year) {
+        return filmStorage.popularFilmsByGenreAndYear(genreId, limit, year);
+    }
+
+    public List<Film> popularFilmsByGenre(int genreId, int count) {
+        return filmStorage.popularFilmsByGenre(genreId, count);
+    }
+
+    public List<Film> popularFilmsByYear(int year, int count) {
+        return filmStorage.popularFilmsByYear(year, count);
+    }
+
+
 }
