@@ -292,17 +292,17 @@ public class FilmControllerTest {
 
     @Test
     public void getPopularFilmsByYearOnlyTest() {
-        Film film2020_1 = createFilmTest("Фильм 2020_1", 2020, List.of(2));
-        Film film2020_2 = createFilmTest("Фильм 2020_2", 2020, List.of(2));
+        Film film2020One = createFilmTest("Фильм 2020_1", 2020, List.of(2));
+        Film film2020Two = createFilmTest("Фильм 2020_2", 2020, List.of(2));
         Film film2021 = createFilmTest("Фильм 2021", 2021, List.of(2));
         Film film2019 = createFilmTest("Фильм 2019", 2019, List.of(2));
 
         User user1 = createUserTest("user1");
         User user2 = createUserTest("user2");
 
-        filmController.addLike(film2020_1.getId(), user1.getId());
-        filmController.addLike(film2020_1.getId(), user2.getId());
-        filmController.addLike(film2020_2.getId(), user1.getId());
+        filmController.addLike(film2020One.getId(), user1.getId());
+        filmController.addLike(film2020One.getId(), user2.getId());
+        filmController.addLike(film2020Two.getId(), user1.getId());
 
         List<Film> result = filmController.getPopularFilms(2, null, 2020);
 
