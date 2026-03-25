@@ -268,6 +268,50 @@ public class FilmControllerTest {
         assertFalse(result.stream().anyMatch(f -> f.getId().equals(film4.getId())));
     }
 
+    @Test
+    public void getPopularFilmsByGenreOnlyTest() {
+        Film comedy = createFilmTest("Комедия", 2020, List.of(1));
+        Film drama1 = createFilmTest("Драма 1", 2020, List.of(2));
+        Film drama2 = createFilmTest("Драма 2", 2020, List.of(2));
+        Film thriller = createFilmTest("Триллер", 2020, List.of(4));
+
+        User user1 = createUserTest("user1");
+        User user2 = createUserTest("user2");
+
+        filmController.addLike(drama1.getId(), user1.getId());
+        filmController.addLike(drama1.getId(), user2.getId());
+        filmController.addLike(drama2.getId(), user1.getId());
+
+        List<Film> result = filmController.getPopularFilms(2, 2, null);
+
+        assertEquals(2, result.size());
+        for (Film film : result) {
+            assertTrue(film.getGenres().stream().anyMatch(g -> g.getId() == 2));
+        }
+    }
+
+    @Test
+    public void getPopularFilmsByYearOnlyTest() {
+        Film film2020_1 = createFilmTest("Фильм 2020_1", 2020, List.of(2));
+        Film film2020_2 = createFilmTest("Фильм 2020_2", 2020, List.of(2));
+        Film film2021 = createFilmTest("Фильм 2021", 2021, List.of(2));
+        Film film2019 = createFilmTest("Фильм 2019", 2019, List.of(2));
+
+        User user1 = createUserTest("user1");
+        User user2 = createUserTest("user2");
+
+        filmController.addLike(film2020_1.getId(), user1.getId());
+        filmController.addLike(film2020_1.getId(), user2.getId());
+        filmController.addLike(film2020_2.getId(), user1.getId());
+
+        List<Film> result = filmController.getPopularFilms(2, null, 2020);
+
+        assertEquals(2, result.size());
+        for (Film film : result) {
+            assertEquals(2020, film.getReleaseDate().getYear());
+        }
+    }
+
     private Film createFilmTest(String name, int year, List<Integer> genreIds) {
         Film film = new Film();
         film.setName(name);
