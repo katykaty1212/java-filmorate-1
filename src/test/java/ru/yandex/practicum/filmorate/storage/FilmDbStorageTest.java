@@ -259,6 +259,34 @@ public class FilmDbStorageTest {
     }
 
     @Test
+    void shouldDeleteFilmByIds() {
+        Film film1 = createTestFilm("Test Film");
+        Film createdFilm1 = filmStorage.create(film1);
+
+        filmStorage.delete(createdFilm1.getId());
+
+        assertTrue(filmStorage.getFilmById(createdFilm1.getId()).isEmpty());
+    }
+
+    @Test
+    void shouldDeleteLikesWhenFilmDeleted() {
+        Film film1 = createTestFilm("Test Film");
+        Film createdFilm1 = filmStorage.create(film1);
+
+        User user1 = createTestUser();
+        User createdUser1 = userStorage.create(user1);
+
+
+        filmStorage.addLike(createdFilm1.getId(), createdUser1.getId());
+
+        filmStorage.delete(createdFilm1.getId());
+
+        List<Film> popular = filmStorage.getPopularFilms(10L);
+
+        assertTrue(popular.stream().noneMatch(film -> film.getId().equals(createdFilm1.getId())));
+    }
+
+    @Test
     void shouldFindFilmByTitle() {
         Film film1 = createTestFilm("Test Film");
         Film createdFilm1 = filmStorage.create(film1);

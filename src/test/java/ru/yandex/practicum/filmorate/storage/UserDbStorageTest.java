@@ -98,17 +98,6 @@ public class UserDbStorageTest {
     }
 
     @Test
-    void shouldDeleteUser() {
-        User user = createTestUser("delete@mail.ru", "deletelogin");
-        User created = userStorage.create(user);
-
-        userStorage.delete(created.getId());
-
-        Optional<User> found = userStorage.getUserById(created.getId());
-        assertFalse(found.isPresent());
-    }
-
-    @Test
     void shouldAddFriend() {
         User user1 = createTestUser("friend1@mail.ru", "friend1");
         User user2 = createTestUser("friend2@mail.ru", "friend2");
@@ -151,5 +140,15 @@ public class UserDbStorageTest {
                 Integer.class, created1.getId(), created2.getId()
         );
         assertEquals(0, count);
+    }
+
+    @Test
+    void shouldDeleteUserById() {
+        User user = createTestUser("test@mail.ru", "testlogin");
+        User created = userStorage.create(user);
+
+        userStorage.delete(created.getId());
+
+        assertTrue(userStorage.getUserById(created.getId()).isEmpty());
     }
 }
