@@ -99,7 +99,7 @@ public class FilmService {
         return filmStorage.popularFilmsByGenre(genreId, count);
     }
 
-    public List<Film> popularFilmsByYear(int year, int count){
+    public List<Film> popularFilmsByYear(int year, int count) {
         return filmStorage.popularFilmsByYear(year, count);
     }
 
