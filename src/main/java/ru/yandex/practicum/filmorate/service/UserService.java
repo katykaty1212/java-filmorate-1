@@ -9,7 +9,8 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -35,8 +36,9 @@ public class UserService {
         return userStorage.update(newUser);
     }
 
-    public User delete(Long userId) {
-        return userStorage.delete(userId);
+    public void delete(Long userId) {
+        getUserById(userId);
+        userStorage.delete(userId);
     }
 
     public User getUserById(Long userId) {

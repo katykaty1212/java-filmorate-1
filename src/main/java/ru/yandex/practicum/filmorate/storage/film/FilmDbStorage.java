@@ -6,7 +6,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -129,14 +128,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     @Override
-    public Film delete(Long id) {
-        String sql = "DELETE FROM films WHERE film_id = ?";
-        Film film = getFilmById(id)
-                .orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
-
-        update(sql, id);
-        log.info("Удалён фильм с ID: {}", id);
-        return film;
+    public void delete(Long filmId) {
+        jdbcTemplate.update("DELETE FROM films WHERE film_id = ?", filmId);
     }
 
     @Override
@@ -382,4 +375,69 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         return films;
     }
+
+    @Override
+    public List<Film> search(String query, String by) {
+        Set<String> options = Set.of(by.split(","));
+
+        if (options.size() == 1) {
+            if (options.contains("title")) {
+                return findByTitle(query);
+            } else {
+                return findByDirector(query);
+            }
+        }
+        return findByTitleAndDirector(query);
+    }
+
+    private List<Film> findByTitleAndDirector(String query) {
+        String sql = """
+                SELECT f.*, COUNT(l.user_id) AS likes_count
+                FROM films f
+                LEFT JOIN film_director fd ON f.film_id = fd.film_id
+                LEFT JOIN directors d ON d.director_id = fd.director_id
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                OR LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                GROUP BY f.film_id
+                ORDER BY likes_count DESC;
+                """;
+
+        List<Film> films = jdbcTemplate.query(sql, mapper, query, query);
+        films.forEach(this::loadFilmData);
+        return films;
+    }
+
+    private List<Film> findByDirector(String query) {
+        String sql = """
+                SELECT f.*, COUNT(l.user_id) AS likes_count
+                FROM films f
+                JOIN film_director fd ON f.film_id = fd.film_id
+                JOIN directors d ON d.director_id = fd.director_id
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                GROUP BY f.film_id
+                ORDER BY likes_count DESC;
+                """;
+
+        List<Film> films = jdbcTemplate.query(sql, mapper, query);
+        films.forEach(this::loadFilmData);
+        return films;
+    }
+
+    private List<Film> findByTitle(String query) {
+        String sql = """
+                SELECT f.*, COUNT(l.user_id) AS likes_count
+                FROM films f
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                GROUP BY f.film_id
+                ORDER BY likes_count DESC;
+                """;
+
+        List<Film> films = jdbcTemplate.query(sql, mapper, query);
+        films.forEach(this::loadFilmData);
+        return films;
+    }
+
 }

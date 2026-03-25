@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -13,6 +14,7 @@ import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -51,8 +53,9 @@ public class FilmService {
         return filmStorage.update(newFilm);
     }
 
-    public Film delete(Long id) {
-        return filmStorage.delete(id);
+    public void delete(Long filmId) {
+        getFilmById(filmId);
+        filmStorage.delete(filmId);
     }
 
     public Collection<Film> findAll() {
@@ -96,4 +99,20 @@ public class FilmService {
         directorService.findById(directorId);
         return filmStorage.allFilmsByDirector(directorId, sortBy);
     }
+
+    public List<Film> search(String query, String by) {
+        validateBy(by);
+        return filmStorage.search(query, by);
+    }
+
+    private void validateBy(String by) {
+        Set<String> options = Set.of("director", "title");
+
+        for (String option : by.split(",")) {
+            if (!options.contains(option)) {
+                throw new ValidationException("Поиск можно осуществить только по режиссеру и/или названию фильма. Неверный параметр поиска: " + option);
+            }
+        }
+    }
+
 }
