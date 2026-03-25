@@ -9,7 +9,7 @@ public interface FilmStorage {
 
     Film update(Film newFilm);
 
-    Film delete(Long id);
+    void delete(Long filmId);
 
     Collection<Film> findAll();
 
@@ -23,6 +23,8 @@ public interface FilmStorage {
 
     List<Film> getPopularFilms(Long count);
 
+    List<Film> getCommonFilms(Long userId, Long friendId);
+
     Set<Long> getLikedFilmIds(Long userId);
 
     Map<Long, Set<Long>> getAllUserLikes();
@@ -30,6 +32,8 @@ public interface FilmStorage {
     List<Film> getFilmsByIds(Set<Long> ids);
 
     List<Film> allFilmsByDirector(Long directorId, String sortBy);
+
+    List<Film> search(String query, String by);
 
     List<Film> popularFilmsByGenreAndYear(int genreId, int limit, int year);
 

@@ -45,7 +45,7 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
     public Director update(Director newDirector) {
         String sql = "UPDATE directors SET name = ? WHERE director_id = ?";
 
-        update(sql, newDirector.getName(),newDirector.getId());
+        update(sql, newDirector.getName(), newDirector.getId());
         log.info("Обновлён режиссер с ID: {}", newDirector.getId());
 
         return newDirector;

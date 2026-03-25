@@ -6,7 +6,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -129,14 +128,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     @Override
-    public Film delete(Long id) {
-        String sql = "DELETE FROM films WHERE film_id = ?";
-        Film film = getFilmById(id)
-                .orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
-
-        update(sql, id);
-        log.info("Удалён фильм с ID: {}", id);
-        return film;
+    public void delete(Long filmId) {
+        jdbcTemplate.update("DELETE FROM films WHERE film_id = ?", filmId);
     }
 
     @Override
@@ -223,6 +216,20 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             return Collections.emptyList();
         }
 
+    }
+
+    @Override
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        String sql = "SELECT f.*, " +
+                "(SELECT COUNT(*) FROM likes l WHERE l.film_id = f.film_id) AS likes_count " +
+                "FROM films f " +
+                "WHERE EXISTS (SELECT 1 FROM likes l1 WHERE l1.film_id = f.film_id AND l1.user_id = ?) " +
+                "AND EXISTS (SELECT 1 FROM likes l2 WHERE l2.film_id = f.film_id AND l2.user_id = ?) " +
+                "ORDER BY likes_count DESC, f.film_id";
+
+        List<Film> commonFilms = findMany(sql, userId, friendId);
+        commonFilms.forEach(this::loadFilmData);
+        return commonFilms;
     }
 
     private Set<Genre> genresLoad(Long filmId) {
@@ -433,4 +440,69 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             return Collections.emptyList();
         }
     }
+
+    @Override
+    public List<Film> search(String query, String by) {
+        Set<String> options = Set.of(by.split(","));
+
+        if (options.size() == 1) {
+            if (options.contains("title")) {
+                return findByTitle(query);
+            } else {
+                return findByDirector(query);
+            }
+        }
+        return findByTitleAndDirector(query);
+    }
+
+    private List<Film> findByTitleAndDirector(String query) {
+        String sql = """
+                SELECT f.*, COUNT(l.user_id) AS likes_count
+                FROM films f
+                LEFT JOIN film_director fd ON f.film_id = fd.film_id
+                LEFT JOIN directors d ON d.director_id = fd.director_id
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                OR LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                GROUP BY f.film_id
+                ORDER BY likes_count DESC;
+                """;
+
+        List<Film> films = jdbcTemplate.query(sql, mapper, query, query);
+        films.forEach(this::loadFilmData);
+        return films;
+    }
+
+    private List<Film> findByDirector(String query) {
+        String sql = """
+                SELECT f.*, COUNT(l.user_id) AS likes_count
+                FROM films f
+                JOIN film_director fd ON f.film_id = fd.film_id
+                JOIN directors d ON d.director_id = fd.director_id
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                GROUP BY f.film_id
+                ORDER BY likes_count DESC;
+                """;
+
+        List<Film> films = jdbcTemplate.query(sql, mapper, query);
+        films.forEach(this::loadFilmData);
+        return films;
+    }
+
+    private List<Film> findByTitle(String query) {
+        String sql = """
+                SELECT f.*, COUNT(l.user_id) AS likes_count
+                FROM films f
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
+                GROUP BY f.film_id
+                ORDER BY likes_count DESC;
+                """;
+
+        List<Film> films = jdbcTemplate.query(sql, mapper, query);
+        films.forEach(this::loadFilmData);
+        return films;
+    }
+
 }
