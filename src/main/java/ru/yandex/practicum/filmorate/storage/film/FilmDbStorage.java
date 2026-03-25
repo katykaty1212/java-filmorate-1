@@ -129,14 +129,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     @Override
-    public Film delete(Long id) {
-        String sql = "DELETE FROM films WHERE film_id = ?";
-        Film film = getFilmById(id)
-                .orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
-
-        update(sql, id);
-        log.info("Удалён фильм с ID: {}", id);
-        return film;
+    public void delete(Long filmId) {
+        jdbcTemplate.update("DELETE FROM films WHERE film_id = ?", filmId);
     }
 
     @Override
