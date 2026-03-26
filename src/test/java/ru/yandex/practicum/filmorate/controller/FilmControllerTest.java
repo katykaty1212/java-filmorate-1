@@ -39,7 +39,6 @@ public class FilmControllerTest {
     private FilmDbStorage filmStorage;
     private UserDbStorage userStorage;
     private DirectorService directorService;
-    private UserController userController;
 
     @BeforeEach
     void setUp() {
