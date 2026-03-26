@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.*;
@@ -25,6 +26,9 @@ import ru.yandex.practicum.filmorate.storage.user.UserRowMapper;
 import javax.sql.DataSource;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,6 +39,7 @@ public class FilmControllerTest {
     private FilmDbStorage filmStorage;
     private UserDbStorage userStorage;
     private DirectorService directorService;
+    private UserController userController;
 
     @BeforeEach
     void setUp() {
@@ -203,4 +208,180 @@ public class FilmControllerTest {
         assertEquals(secondFilm.getId(), films[1].getId());
     }
 
+
+    @Test
+    public void popularFilmsByGenreAndYearTest() {
+        Film film1 = createFilmTest("Драма 2020 много лайков", 2020, List.of(2));
+        Film film2 = createFilmTest("Драма 2020 средне", 2020, List.of(2));
+        Film film3 = createFilmTest("Драма 2021", 2021, List.of(2));
+        Film film4 = createFilmTest("Комедия 2020", 2020, List.of(1));
+        Film film5 = createFilmTest("Драма 2020 без лайков", 2020, List.of(2));
+        Film film6 = createFilmTest("Драма 2019", 2019, List.of(2));
+        Film film7 = createFilmTest("Драма 2020 тоже много", 2020, List.of(2));
+
+        User user1 = createUserTest("user1");
+        User user2 = createUserTest("user2");
+        User user3 = createUserTest("user3");
+        User user4 = createUserTest("user4");
+        User user5 = createUserTest("user5");
+
+        filmController.addLike(film1.getId(), user1.getId());
+        filmController.addLike(film1.getId(), user2.getId());
+        filmController.addLike(film1.getId(), user3.getId());
+        filmController.addLike(film1.getId(), user4.getId());
+        filmController.addLike(film1.getId(), user5.getId());
+
+        filmController.addLike(film2.getId(), user1.getId());
+        filmController.addLike(film2.getId(), user2.getId());
+        filmController.addLike(film2.getId(), user3.getId());
+
+        filmController.addLike(film3.getId(), user1.getId());
+
+        filmController.addLike(film4.getId(), user1.getId());
+        filmController.addLike(film4.getId(), user2.getId());
+
+        filmController.addLike(film6.getId(), user1.getId());
+        filmController.addLike(film6.getId(), user2.getId());
+
+        filmController.addLike(film7.getId(), user1.getId());
+        filmController.addLike(film7.getId(), user2.getId());
+        filmController.addLike(film7.getId(), user3.getId());
+        filmController.addLike(film7.getId(), user4.getId());
+
+        Collection<Film> filmsFromDb = filmController.findAll();
+        assertEquals(7, filmsFromDb.size());
+
+        List<Film> result = filmController.getPopularFilms(3, 2, 2020);
+
+        assertEquals(3, result.size());
+
+        for (Film film : result) {
+            assertTrue(film.getGenres().stream().anyMatch(g -> g.getId() == 2));
+        }
+
+        for (Film film : result) {
+            assertEquals(2020, film.getReleaseDate().getYear());
+        }
+
+        List<Long> expectedIds = List.of(film1.getId(), film7.getId(), film2.getId());
+        List<Long> actualIds = result.stream().map(Film::getId).toList();
+        assertEquals(expectedIds, actualIds);
+
+        assertFalse(result.stream().anyMatch(f -> f.getId().equals(film3.getId())));
+        assertFalse(result.stream().anyMatch(f -> f.getId().equals(film4.getId())));
+        assertFalse(result.stream().anyMatch(f -> f.getId().equals(film6.getId())));
+        assertFalse(result.stream().anyMatch(f -> f.getId().equals(film5.getId())));
+
+    }
+
+    @Test
+    public void getPopularFilmsOnlyCountTest() {
+        Film film1 = createFilmTest("Фильм 5 лайков", 2020, List.of(2));
+        Film film2 = createFilmTest("Фильм 3 лайка", 2020, List.of(2));
+        Film film3 = createFilmTest("Фильм 1 лайк", 2020, List.of(2));
+        Film film4 = createFilmTest("Фильм без лайков", 2020, List.of(2));
+
+        User user1 = createUserTest("user1");
+        User user2 = createUserTest("user2");
+        User user3 = createUserTest("user3");
+        User user4 = createUserTest("user4");
+        User user5 = createUserTest("user5");
+
+        filmController.addLike(film1.getId(), user1.getId());
+        filmController.addLike(film1.getId(), user2.getId());
+        filmController.addLike(film1.getId(), user3.getId());
+        filmController.addLike(film1.getId(), user4.getId());
+        filmController.addLike(film1.getId(), user5.getId());
+
+        filmController.addLike(film2.getId(), user1.getId());
+        filmController.addLike(film2.getId(), user2.getId());
+        filmController.addLike(film2.getId(), user3.getId());
+
+        filmController.addLike(film3.getId(), user1.getId());
+
+        List<Film> result = filmController.getPopularFilms(3, null, null);
+
+        // Проверки
+        assertEquals(3, result.size());
+        assertEquals(film1.getId(), result.get(0).getId());
+        assertEquals(film2.getId(), result.get(1).getId());
+        assertEquals(film3.getId(), result.get(2).getId());
+        assertFalse(result.stream().anyMatch(f -> f.getId().equals(film4.getId())));
+    }
+
+    @Test
+    public void getPopularFilmsByGenreOnlyTest() {
+        Film comedy = createFilmTest("Комедия", 2020, List.of(1));
+        Film drama1 = createFilmTest("Драма 1", 2020, List.of(2));
+        Film drama2 = createFilmTest("Драма 2", 2020, List.of(2));
+        Film thriller = createFilmTest("Триллер", 2020, List.of(4));
+
+        User user1 = createUserTest("user1");
+        User user2 = createUserTest("user2");
+
+        filmController.addLike(drama1.getId(), user1.getId());
+        filmController.addLike(drama1.getId(), user2.getId());
+        filmController.addLike(drama2.getId(), user1.getId());
+
+        List<Film> result = filmController.getPopularFilms(2, 2, null);
+
+        assertEquals(2, result.size());
+        for (Film film : result) {
+            assertTrue(film.getGenres().stream().anyMatch(g -> g.getId() == 2));
+        }
+    }
+
+    @Test
+    public void getPopularFilmsByYearOnlyTest() {
+        Film film2020One = createFilmTest("Фильм 2020_1", 2020, List.of(2));
+        Film film2020Two = createFilmTest("Фильм 2020_2", 2020, List.of(2));
+        Film film2021 = createFilmTest("Фильм 2021", 2021, List.of(2));
+        Film film2019 = createFilmTest("Фильм 2019", 2019, List.of(2));
+
+        User user1 = createUserTest("user1");
+        User user2 = createUserTest("user2");
+
+        filmController.addLike(film2020One.getId(), user1.getId());
+        filmController.addLike(film2020One.getId(), user2.getId());
+        filmController.addLike(film2020Two.getId(), user1.getId());
+
+        List<Film> result = filmController.getPopularFilms(2, null, 2020);
+
+        assertEquals(2, result.size());
+        for (Film film : result) {
+            assertEquals(2020, film.getReleaseDate().getYear());
+        }
+    }
+
+    private Film createFilmTest(String name, int year, List<Integer> genreIds) {
+        Film film = new Film();
+        film.setName(name);
+        film.setDescription("Description");
+        film.setReleaseDate(LocalDate.of(year, 1, 1));
+        film.setDuration(120);
+
+        MPA mpa = new MPA();
+        mpa.setId(1);
+        film.setMpa(mpa);
+
+        Set<Genre> genres = new LinkedHashSet<>();
+        for (Integer id : genreIds) {
+            Genre genre = new Genre();
+            genre.setId(id);
+            genres.add(genre);
+        }
+        film.setGenres(genres);
+
+        return filmController.create(film);
+    }
+
+    private User createUserTest(String login) {
+        User user = new User();
+        user.setEmail(login + "@test.com");
+        user.setLogin(login);
+        user.setName(login);
+        user.setBirthday(LocalDate.of(1990, 1, 1));
+
+        return userController.create(user);
+    }
 }
