@@ -22,13 +22,13 @@ public class EventDbStorage extends BaseDbStorage<Event> {
     public List<Event> eventFeed(Long userId) {
         String sql = "SELECT e.* " +
                 "FROM events e " +
-                "WHERE user_id IN (" +
+                "WHERE user_id = ? OR e.user_id IN (" +
                 "SELECT friend_id " +
                 "FROM friendship " +
                 "WHERE user_id = ?) " +
                 "ORDER BY time_stamp DESC ";
 
-        return jdbcTemplate.query(sql, mapper, userId);
+        return jdbcTemplate.query(sql, mapper, userId, userId);
     }
 
     public void createEvent(Long userId, EventType eventType, Operation operation, Long entityId) {
