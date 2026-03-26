@@ -82,3 +82,13 @@ PRIMARY KEY (film_id, director_id),
 FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
 FOREIGN KEY (director_id) REFERENCES directors(director_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS events (
+event_id BIGINT PRIMARY KEY AUTO_INCREMENT, -- primary key
+time_stamp BIGINT NOT NULL,
+user_id BIGINT NOT NULL,
+event_type VARCHAR(20) NOT NULL, -- одно из значениий LIKE, REVIEW или FRIEND
+operation VARCHAR(20) NOT NULL, -- одно из значениий REMOVE, ADD, UPDATE
+entity_id BIGINT NOT NULL,
+FOREIGN KEY (user_id)  REFERENCES users(user_id) ON DELETE CASCADE
+);

@@ -1,12 +1,15 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
@@ -14,13 +17,11 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserService {
 
     public final UserStorage userStorage;
-
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
+    public final EventDbStorage eventDbStorage;
 
     public Collection<User> findAll() {
         return userStorage.findAll();
@@ -65,6 +66,9 @@ public class UserService {
             throw new ValidationException("Пользователь с ID " +
                     friendId + " уже в друзьях у пользователя с ID" + userId);
         }
+
+        eventDbStorage.createEvent(userId, EventType.FRIEND, Operation.ADD, friendId);
+        eventDbStorage.createEvent(friendId, EventType.FRIEND, Operation.ADD, userId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
@@ -74,6 +78,9 @@ public class UserService {
 
         userStorage.deleteFriend(userId, friendId);
         log.info("Пользователь {} удалил из друзей пользователя {}", userId, friendId);
+
+        eventDbStorage.createEvent(userId, EventType.FRIEND, Operation.REMOVE, friendId);
+        eventDbStorage.createEvent(friendId, EventType.FRIEND, Operation.REMOVE, userId);
     }
 
     public List<User> getListUserFriend(Long userId) {

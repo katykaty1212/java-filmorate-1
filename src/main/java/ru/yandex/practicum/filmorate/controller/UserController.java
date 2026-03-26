@@ -3,8 +3,10 @@ package ru.yandex.practicum.filmorate.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.RecommendationService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -18,6 +20,7 @@ public class UserController {
 
     private final UserService userService;
     private final RecommendationService recommendationService;
+    private final EventService eventService;
 
     @GetMapping
     public Collection<User> findAll() {
@@ -68,5 +71,10 @@ public class UserController {
     @GetMapping("/{id}/recommendations")
     public List<Film> getRecommendations(@PathVariable Long id) {
         return recommendationService.getRecommendations(id);
+    }
+
+    @GetMapping("/{userId}/feed")
+    public List<Event> getEventFeed(@PathVariable Long userId) {
+        return eventService.eventFeed(userId);
     }
 }

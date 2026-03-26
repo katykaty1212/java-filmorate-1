@@ -9,9 +9,12 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.DirectorService;
+import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
@@ -62,14 +65,17 @@ public class FilmControllerTest {
         UserRowMapper userRowMapper = new UserRowMapper();
         FriendshipRowMapper friendshipRowMapper = new FriendshipRowMapper();
         DirectorRowMapper directorRowMapper = new DirectorRowMapper();
+        EventRowMapper eventRowMapper = new EventRowMapper();
 
         MpaDbStorage mpaDbStorage = new MpaDbStorage(jdbcTemplate, mpaRowMapper);  // добавить
         GenreDbStorage genreDbStorage = new GenreDbStorage(jdbcTemplate, genreRowMapper);  // добавить
         filmStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper, directorRowMapper);
         userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
+        EventDbStorage eventDbStorage = new EventDbStorage(jdbcTemplate,eventRowMapper);
 
-        UserService userService = new UserService(userStorage);
-        FilmService filmService = new FilmService(filmStorage, userService, directorService, mpaDbStorage, genreDbStorage);
+        UserService userService = new UserService(userStorage, eventDbStorage);
+        EventService eventService = new EventService();
+        FilmService filmService = new FilmService(filmStorage, userService, directorService, mpaDbStorage, genreDbStorage, eventService);
         filmController = new FilmController(filmService);
     }
 
