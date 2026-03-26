@@ -100,7 +100,7 @@ public class EventDbStorageTest {
         assertTrue(feed.stream().allMatch(e -> e.getUserId() == 2L || e.getUserId() == 3L));
 
         for (int i = 0; i < feed.size() - 1; i++) {
-            assertTrue(feed.get(i).getTimestamp() >= feed.get(i + 1).getTimestamp());
+            assertTrue(feed.get(i).getTimestamp() <= feed.get(i + 1).getTimestamp());
         }
     }
 
