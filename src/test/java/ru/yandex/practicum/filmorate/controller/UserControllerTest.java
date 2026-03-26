@@ -72,7 +72,7 @@ public class UserControllerTest {
 
         UserService userService = new UserService(userStorage, eventDbStorage);
         RecommendationService recommendationService = new RecommendationService(filmStorage);
-        EventService eventService = new EventService();
+        EventService eventService = new EventService(eventDbStorage);
         userController = new UserController(userService, recommendationService, eventService);
     }
 

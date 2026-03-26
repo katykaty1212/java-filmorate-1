@@ -71,10 +71,10 @@ public class FilmControllerTest {
         GenreDbStorage genreDbStorage = new GenreDbStorage(jdbcTemplate, genreRowMapper);  // добавить
         filmStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper, directorRowMapper);
         userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
-        EventDbStorage eventDbStorage = new EventDbStorage(jdbcTemplate,eventRowMapper);
+        EventDbStorage eventDbStorage = new EventDbStorage(jdbcTemplate, eventRowMapper);
 
         UserService userService = new UserService(userStorage, eventDbStorage);
-        EventService eventService = new EventService();
+        EventService eventService = new EventService(eventDbStorage);
         FilmService filmService = new FilmService(filmStorage, userService, directorService, mpaDbStorage, genreDbStorage, eventService);
         filmController = new FilmController(filmService);
     }

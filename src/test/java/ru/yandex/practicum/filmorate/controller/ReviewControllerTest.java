@@ -79,14 +79,15 @@ public class ReviewControllerTest {
         DirectorDbStorage directorDbStorage = new DirectorDbStorage(jdbcTemplate, directorRowMapper);
         EventDbStorage eventDbStorage = new EventDbStorage(jdbcTemplate, eventRowMapper);
 
-        EventService eventService = new EventService();
+        EventService eventService = new EventService(eventDbStorage);
         UserService userService = new UserService(userStorage, eventDbStorage);
         DirectorService directorService = new DirectorService(directorDbStorage);
-        FilmService filmService = new FilmService(filmStorage, userService, directorService, mpaDbStorage, genreDbStorage, eventService);
+        FilmService filmService = new FilmService(filmStorage, userService,
+                directorService, mpaDbStorage, genreDbStorage, eventService);
         ReviewService reviewService = new ReviewService(reviewStorage, userService, filmService, eventService);
         RecommendationService recommendationService = new RecommendationService(filmStorage);
 
-        userController = new UserController(userService, recommendationService,eventService);
+        userController = new UserController(userService, recommendationService, eventService);
         filmController = new FilmController(filmService);
         reviewController = new ReviewController(reviewService);
     }

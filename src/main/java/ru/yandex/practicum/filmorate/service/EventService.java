@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EventService {
 
-    EventDbStorage eventDbStorage;
+    private final EventDbStorage eventDbStorage;
 
     public List<Event> eventFeed(Long userId) {
         return eventDbStorage.eventFeed(userId);

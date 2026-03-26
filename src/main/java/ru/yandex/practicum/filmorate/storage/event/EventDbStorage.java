@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.storage.event;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.EventType;
@@ -16,8 +15,8 @@ import java.util.List;
 @Slf4j
 public class EventDbStorage extends BaseDbStorage<Event> {
 
-    public EventDbStorage(JdbcTemplate jdbcTemplate, RowMapper<Event> mapper) {
-        super(jdbcTemplate, mapper);
+    public EventDbStorage(JdbcTemplate jdbcTemplate, EventRowMapper eventRowMapper) {
+        super(jdbcTemplate, eventRowMapper);
     }
 
     public List<Event> eventFeed(Long userId) {
