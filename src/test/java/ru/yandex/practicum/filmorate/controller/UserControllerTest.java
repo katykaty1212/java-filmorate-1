@@ -229,4 +229,5 @@ public class UserControllerTest {
         assertEquals(3L, recommendations.get(0).getId());
         assertEquals("Film 3", recommendations.get(0).getName());
     }
+
 }
