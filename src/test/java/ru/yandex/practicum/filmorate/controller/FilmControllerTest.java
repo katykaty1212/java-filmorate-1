@@ -8,10 +8,7 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.DirectorService;
-import ru.yandex.practicum.filmorate.service.EventService;
-import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.service.*;
 import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.event.EventRowMapper;
@@ -34,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FilmControllerTest {
 
     private FilmController filmController;
+    private UserController userController;
     private FilmDbStorage filmStorage;
     private UserDbStorage userStorage;
     private DirectorService directorService;
@@ -76,7 +74,9 @@ public class FilmControllerTest {
         UserService userService = new UserService(userStorage, eventDbStorage);
         EventService eventService = new EventService(eventDbStorage);
         FilmService filmService = new FilmService(filmStorage, userService, directorService, mpaDbStorage, genreDbStorage, eventService);
+        RecommendationService recommendationService = new RecommendationService(filmStorage);
         filmController = new FilmController(filmService);
+        userController = new UserController(userService, recommendationService, eventService);
     }
 
     private Film createTestFilm(String name) {
