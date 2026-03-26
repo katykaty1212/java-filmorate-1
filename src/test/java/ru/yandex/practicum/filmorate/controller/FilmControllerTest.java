@@ -180,9 +180,9 @@ public class FilmControllerTest {
 
     @Test
     public void getCommonFilmsTest() {
-        User firstUser = userStorage.create(createTestUser("1"));
-        User secondUser = userStorage.create(createTestUser("2"));
-        User thirdUser = userStorage.create(createTestUser("3"));
+        User firstUser = userController.create(createTestUser("1"));
+        User secondUser = userController.create(createTestUser("2"));
+        User thirdUser = userController.create(createTestUser("3"));
 
         Film firstFilm = filmController.create(createTestFilm("First Film"));
         Film secondFilm = filmController.create(createTestFilm("Second Film"));
