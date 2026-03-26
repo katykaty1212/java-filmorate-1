@@ -25,8 +25,7 @@ public class EventDbStorage extends BaseDbStorage<Event> {
                 "WHERE user_id IN (" +
                 "SELECT friend_id " +
                 "FROM friendship " +
-                "WHERE user_id = ? AND status = TRUE" +
-                ") " +
+                "WHERE user_id = ?) " +
                 "ORDER BY time_stamp DESC ";
 
         return jdbcTemplate.query(sql, mapper, userId);
