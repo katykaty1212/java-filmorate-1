@@ -20,28 +20,34 @@ public class EventDbStorage extends BaseDbStorage<Event> {
     }
 
     public List<Event> eventFeed(Long userId) {
-        String sql = "SELECT e.* " +
-                "FROM events e " +
-                "WHERE user_id = ? OR e.user_id IN (" +
-                "SELECT friend_id " +
-                "FROM friendship " +
-                "WHERE user_id = ?) " +
-                "ORDER BY time_stamp ASC";
+        String sql = """
+                     SELECT e.*
+                     FROM events e
+                     WHERE e.user_id = ?
+                     ORDER BY e.event_id ASC;
+                """;
 
-        return jdbcTemplate.query(sql, mapper, userId, userId);
+        return jdbcTemplate.query(sql, mapper, userId);
     }
 
-    public void createEvent(Long userId, EventType eventType, Operation operation, Long entityId) {
+    public Event createEvent(Long userId, EventType eventType, Operation operation, Long entityId) {
 
         String sql = "INSERT INTO events (user_id, event_type, operation, entity_id, time_stamp) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
-        Event event = new Event();
         Long timeStamp = Instant.now().toEpochMilli();
-
         long eventId = insert(sql, userId, eventType.name(), operation.name(), entityId, timeStamp);
+
+        Event event = new Event();
+        event.setEventId(eventId);
+        event.setUserId(userId);
+        event.setEventType(eventType);
+        event.setOperation(operation);
+        event.setEntityId(entityId);
+        event.setTimestamp(timeStamp);
+
         log.info("Создано событие с ID: {}", eventId);
 
-        event.setEventId(eventId);
+        return event;
     }
 }

@@ -456,7 +456,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 LEFT JOIN likes l ON f.film_id = l.film_id
                 WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
                 OR LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
-                GROUP BY f.film_id
+                GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_id
                 ORDER BY likes_count DESC;
                 """;
 
@@ -473,7 +473,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 JOIN directors d ON d.director_id = fd.director_id
                 LEFT JOIN likes l ON f.film_id = l.film_id
                 WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
-                GROUP BY f.film_id
+                GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_id
                 ORDER BY likes_count DESC;
                 """;
 
@@ -488,7 +488,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 FROM films f
                 LEFT JOIN likes l ON f.film_id = l.film_id
                 WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
-                GROUP BY f.film_id
+                GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_id
                 ORDER BY likes_count DESC;
                 """;
 

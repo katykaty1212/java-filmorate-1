@@ -32,8 +32,8 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
 
     @Override
     public Review update(Review review) {
-        String sql = "UPDATE reviews SET content = ?, is_positive = ?, user_id = ?, film_id = ? WHERE review_id = ?";
-        update(sql, review.getContent(), review.getIsPositive(), review.getUserId(), review.getFilmId(), review.getReviewId());
+        String sql = "UPDATE reviews SET content = ?, is_positive = ? WHERE review_id = ?";
+        update(sql, review.getContent(), review.getIsPositive(), review.getReviewId());
         log.info("Обновлён отзыв с ID {}", review.getReviewId());
         return getReviewById(review.getReviewId())
                 .orElseThrow(() -> new NotFoundException("Отзыв с id " + review.getReviewId() + " не найден"));
@@ -71,7 +71,7 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 "LEFT JOIN review_likes rl ON r.review_id = rl.review_id ";
 
         String tailSql = "GROUP BY r.review_id, r.content, r.is_positive, r.user_id, r.film_id " +
-                "ORDER BY useful DESC, r.review_id ASC " +
+                "ORDER BY useful DESC " +
                 "LIMIT ?";
 
         if (filmId == null) {

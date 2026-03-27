@@ -24,9 +24,9 @@ public class ReviewService {
 
     public Review create(Review review) {
         validateReview(review);
-        reviewStorage.create(review);
-        eventService.createEvent(review.getUserId(), EventType.REVIEW, Operation.ADD, review.getReviewId());
-        return review;
+        Review created = reviewStorage.create(review);
+        eventService.createEvent(created.getUserId(), EventType.REVIEW, Operation.ADD, created.getReviewId());
+        return created;
     }
 
     public Review update(Review review) {
@@ -35,9 +35,9 @@ public class ReviewService {
         }
         getReviewById(review.getReviewId());
         validateReview(review);
-        reviewStorage.update(review);
-        eventService.createEvent(review.getUserId(), EventType.REVIEW, Operation.UPDATE, review.getReviewId());
-        return review;
+        Review updated = reviewStorage.update(review);
+        eventService.createEvent(updated.getUserId(), EventType.REVIEW, Operation.UPDATE, updated.getReviewId());
+        return updated;
     }
 
     public void delete(Long reviewId) {
@@ -72,24 +72,28 @@ public class ReviewService {
         getReviewById(reviewId);
         userService.getUserById(userId);
         reviewStorage.addLike(reviewId, userId);
+        eventService.createEvent(userId, EventType.LIKE, Operation.ADD, reviewId);
     }
 
     public void addDislike(Long reviewId, Long userId) {
         getReviewById(reviewId);
         userService.getUserById(userId);
         reviewStorage.addDislike(reviewId, userId);
+        eventService.createEvent(userId, EventType.LIKE, Operation.ADD, reviewId);
     }
 
     public void deleteLike(Long reviewId, Long userId) {
         getReviewById(reviewId);
         userService.getUserById(userId);
         reviewStorage.deleteLike(reviewId, userId);
+        eventService.createEvent(userId, EventType.LIKE, Operation.REMOVE, reviewId);
     }
 
     public void deleteDislike(Long reviewId, Long userId) {
         getReviewById(reviewId);
         userService.getUserById(userId);
         reviewStorage.deleteDislike(reviewId, userId);
+        eventService.createEvent(userId, EventType.LIKE, Operation.REMOVE, reviewId);
     }
 
     private void validateReview(Review review) {

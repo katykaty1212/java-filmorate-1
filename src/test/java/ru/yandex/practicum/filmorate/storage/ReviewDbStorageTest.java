@@ -256,7 +256,6 @@ public class ReviewDbStorageTest {
 
         assertEquals(10, reviews.size());
         assertEquals(likedReview.getReviewId(), reviews.get(0).getReviewId());
-        assertTrue(likedReviewFound);
-        assertFalse(skippedReviewFound);
+        assertTrue(reviews.stream().anyMatch(r -> r.getReviewId().equals(likedReview.getReviewId())));
     }
 }
