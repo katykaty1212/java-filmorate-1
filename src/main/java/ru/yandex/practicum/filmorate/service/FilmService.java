@@ -43,6 +43,7 @@ public class FilmService {
     }
 
     public Film update(Film newFilm) {
+        getFilmById(newFilm.getId());
         return filmStorage.update(newFilm);
     }
 
