@@ -9,11 +9,10 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.DirectorService;
-import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.service.RecommendationService;
-import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.service.*;
 import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
@@ -36,10 +35,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FilmControllerTest {
 
     private FilmController filmController;
+    private UserController userController;
     private FilmDbStorage filmStorage;
     private UserDbStorage userStorage;
     private DirectorService directorService;
-    private UserController userController;
 
     @BeforeEach
     void setUp() {
@@ -68,16 +67,20 @@ public class FilmControllerTest {
         UserRowMapper userRowMapper = new UserRowMapper();
         FriendshipRowMapper friendshipRowMapper = new FriendshipRowMapper();
         DirectorRowMapper directorRowMapper = new DirectorRowMapper();
+        EventRowMapper eventRowMapper = new EventRowMapper();
 
         MpaDbStorage mpaDbStorage = new MpaDbStorage(jdbcTemplate, mpaRowMapper);  // добавить
         GenreDbStorage genreDbStorage = new GenreDbStorage(jdbcTemplate, genreRowMapper);  // добавить
         filmStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper, directorRowMapper);
         userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
+        EventDbStorage eventDbStorage = new EventDbStorage(jdbcTemplate, eventRowMapper);
 
-        UserService userService = new UserService(userStorage);
-        FilmService filmService = new FilmService(filmStorage, userService, directorService, mpaDbStorage, genreDbStorage);
+        UserService userService = new UserService(userStorage, eventDbStorage);
+        EventService eventService = new EventService(eventDbStorage);
+        FilmService filmService = new FilmService(filmStorage, userService, directorService, mpaDbStorage, genreDbStorage, eventService);
+        RecommendationService recommendationService = new RecommendationService(filmStorage);
         filmController = new FilmController(filmService);
-        userController = new UserController(userService, new RecommendationService(filmStorage));
+        userController = new UserController(userService, recommendationService, eventService);
     }
 
     private Film createTestFilm(String name) {
@@ -181,9 +184,9 @@ public class FilmControllerTest {
 
     @Test
     public void getCommonFilmsTest() {
-        User firstUser = userStorage.create(createTestUser("1"));
-        User secondUser = userStorage.create(createTestUser("2"));
-        User thirdUser = userStorage.create(createTestUser("3"));
+        User firstUser = userController.create(createTestUser("1"));
+        User secondUser = userController.create(createTestUser("2"));
+        User thirdUser = userController.create(createTestUser("3"));
 
         Film firstFilm = filmController.create(createTestFilm("First Film"));
         Film secondFilm = filmController.create(createTestFilm("Second Film"));

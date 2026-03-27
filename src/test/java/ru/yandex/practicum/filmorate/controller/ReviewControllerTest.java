@@ -12,6 +12,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.*;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
@@ -66,6 +68,7 @@ public class ReviewControllerTest {
         FriendshipRowMapper friendshipRowMapper = new FriendshipRowMapper();
         ReviewRowMapper reviewRowMapper = new ReviewRowMapper();
         DirectorRowMapper directorRowMapper = new DirectorRowMapper();
+        EventRowMapper eventRowMapper = new EventRowMapper();
 
         MpaDbStorage mpaDbStorage = new MpaDbStorage(jdbcTemplate, mpaRowMapper);
         GenreDbStorage genreDbStorage = new GenreDbStorage(jdbcTemplate, genreRowMapper);
@@ -74,14 +77,17 @@ public class ReviewControllerTest {
         UserDbStorage userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
         ReviewDbStorage reviewStorage = new ReviewDbStorage(jdbcTemplate, reviewRowMapper);
         DirectorDbStorage directorDbStorage = new DirectorDbStorage(jdbcTemplate, directorRowMapper);
+        EventDbStorage eventDbStorage = new EventDbStorage(jdbcTemplate, eventRowMapper);
 
-        UserService userService = new UserService(userStorage);
+        EventService eventService = new EventService(eventDbStorage);
+        UserService userService = new UserService(userStorage, eventDbStorage);
         DirectorService directorService = new DirectorService(directorDbStorage);
-        FilmService filmService = new FilmService(filmStorage, userService, directorService, mpaDbStorage, genreDbStorage);
-        ReviewService reviewService = new ReviewService(reviewStorage, userService, filmService);
+        FilmService filmService = new FilmService(filmStorage, userService,
+                directorService, mpaDbStorage, genreDbStorage, eventService);
+        ReviewService reviewService = new ReviewService(reviewStorage, userService, filmService, eventService);
         RecommendationService recommendationService = new RecommendationService(filmStorage);
 
-        userController = new UserController(userService, recommendationService);
+        userController = new UserController(userService, recommendationService, eventService);
         filmController = new FilmController(filmService);
         reviewController = new ReviewController(reviewService);
     }

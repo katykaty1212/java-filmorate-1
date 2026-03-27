@@ -1,13 +1,15 @@
 package ru.yandex.practicum.filmorate.service;
 
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
@@ -18,6 +20,7 @@ import java.util.Set;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FilmService {
 
     private final FilmStorage filmStorage;
@@ -25,17 +28,7 @@ public class FilmService {
     private final DirectorService directorService;
     private final MpaDbStorage mpaDbStorage;
     private final GenreDbStorage genreDbStorage;
-
-    public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage,
-                       UserService userService, DirectorService directorService,
-                       MpaDbStorage mpaDbStorage,
-                       GenreDbStorage genreDbStorage) {
-        this.filmStorage = filmStorage;
-        this.userService = userService;
-        this.directorService = directorService;
-        this.mpaDbStorage = mpaDbStorage;
-        this.genreDbStorage = genreDbStorage;
-    }
+    private final EventService eventService;
 
     public Film create(Film film) {
         mpaDbStorage.findById(film.getMpa().getId());
@@ -74,6 +67,7 @@ public class FilmService {
         getFilmById(filmId);
         userService.getUserById(userId);
         filmStorage.addLike(filmId, userId);
+        eventService.createEvent(userId, EventType.LIKE, Operation.ADD, filmId);
         log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
     }
 
@@ -81,7 +75,7 @@ public class FilmService {
         getFilmById(filmId);
         userService.getUserById(userId);
         filmStorage.deleteLike(filmId, userId);
-
+        eventService.createEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
         log.info("Пользователь {} удалил лайк фильму {}", userId, filmId);
     }
 
