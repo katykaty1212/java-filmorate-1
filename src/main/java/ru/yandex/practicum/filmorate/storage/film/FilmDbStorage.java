@@ -348,11 +348,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 "ORDER BY f.release_date ASC";
 
         List<Film> films = findMany(sql, directorId);
-
-        for (Film film : films) {
-            List<Director> directors = directorsLoad(film.getId());
-            film.setDirectors(directors);
-        }
+        films.forEach(this::loadFilmData);
 
         return films;
     }
@@ -367,11 +363,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 "ORDER BY likes_count DESC";
 
         List<Film> films = findMany(sql, directorId);
-
-        for (Film film : films) {
-            List<Director> directors = directorsLoad(film.getId());
-            film.setDirectors(directors);
-        }
+        films.forEach(this::loadFilmData);
 
         return films;
     }
