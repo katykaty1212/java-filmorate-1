@@ -83,30 +83,55 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
 
     @Override
     public boolean addLike(Long reviewId, Long userId) {
-        Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM review_likes WHERE review_id = ? AND user_id = ? AND is_like = TRUE",
-                Integer.class, reviewId, userId
+        Boolean hasLike = jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT * FROM review_likes WHERE review_id = ? AND user_id = ? AND is_like = TRUE)",
+                Boolean.class, reviewId, userId
         );
-        if (count > 0) return false;
 
-        jdbcTemplate.update("INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, TRUE)",
-                reviewId, userId);
+        if (hasLike) {
+            return false;
+        }
+
+        jdbcTemplate.update(
+                "DELETE FROM review_likes WHERE review_id = ? AND user_id = ?",
+                reviewId, userId
+        );
+
+        jdbcTemplate.update(
+                "INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, TRUE)",
+                reviewId, userId
+        );
+
         log.info("Пользователь {} поставил лайк отзыву {}", userId, reviewId);
         return true;
     }
 
+
     @Override
     public boolean addDislike(Long reviewId, Long userId) {
-        Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM review_likes WHERE review_id = ? AND user_id = ? AND is_like = FALSE",
-                Integer.class, reviewId, userId
+        Boolean hasDislike = jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT * FROM review_likes WHERE review_id = ? AND user_id = ? AND is_like = FALSE)",
+                Boolean.class, reviewId, userId
         );
-        if (count > 0) return false;
 
-        jdbcTemplate.update("INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, FALSE)", reviewId, userId);
+        if (hasDislike) {
+            return false;
+        }
+
+        jdbcTemplate.update(
+                "DELETE FROM review_likes WHERE review_id = ? AND user_id = ?",
+                reviewId, userId
+        );
+
+        jdbcTemplate.update(
+                "INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, FALSE)",
+                reviewId, userId
+        );
+
         log.info("Пользователь {} поставил дизлайк отзыву {}", userId, reviewId);
         return true;
     }
+
 
     @Override
     public boolean deleteLike(Long reviewId, Long userId) {
