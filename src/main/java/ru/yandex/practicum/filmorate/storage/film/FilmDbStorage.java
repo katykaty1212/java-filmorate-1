@@ -164,9 +164,16 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public void addLike(Long filmId, Long userId) {
-        String sql = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
-        update(sql, filmId, userId);
-        log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
+        String checkSql = "SELECT COUNT(*) FROM likes WHERE film_id = ? AND user_id = ?";
+        Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, filmId, userId);
+        if (count == 0) {
+            String sql = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
+            update(sql, filmId, userId);
+            log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
+        } else {
+            log.info("Пользователь {} уже поставил лайк фильму {}", userId, filmId);
+        }
+
     }
 
     @Override

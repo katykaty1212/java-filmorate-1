@@ -24,7 +24,7 @@ public class EventDbStorage extends BaseDbStorage<Event> {
                      SELECT e.*
                      FROM events e
                      WHERE e.user_id = ?
-                     ORDER BY e.time_stamp ASC;
+                     ORDER BY e.time_stamp ASC, e.event_id ASC;
                 """;
 
         return jdbcTemplate.query(sql, mapper, userId);
