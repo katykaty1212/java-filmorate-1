@@ -89,9 +89,8 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
         );
         if (count > 0) return false;
 
-        deleteDislike(reviewId, userId);
-
-        jdbcTemplate.update("INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, TRUE)", reviewId, userId);
+        jdbcTemplate.update("INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, TRUE)",
+                reviewId, userId);
         log.info("Пользователь {} поставил лайк отзыву {}", userId, reviewId);
         return true;
     }
@@ -103,8 +102,6 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 Integer.class, reviewId, userId
         );
         if (count > 0) return false;
-
-        deleteLike(reviewId, userId);
 
         jdbcTemplate.update("INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, FALSE)", reviewId, userId);
         log.info("Пользователь {} поставил дизлайк отзыву {}", userId, reviewId);
