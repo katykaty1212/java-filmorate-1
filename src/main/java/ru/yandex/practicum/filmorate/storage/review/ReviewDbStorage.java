@@ -112,16 +112,22 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
     }
 
     @Override
-    public void deleteLike(Long reviewId, Long userId) {
-        String sql = "DELETE FROM review_likes WHERE review_id = ? AND user_id = ? AND is_like = TRUE";
-        jdbcTemplate.update(sql, reviewId, userId);
-        log.info("Пользователь {} удалил лайк у отзыва {}", userId, reviewId);
+    public boolean deleteLike(Long reviewId, Long userId) {
+        int rows = jdbcTemplate.update(
+                "DELETE FROM review_likes WHERE review_id = ? AND user_id = ? AND is_like = TRUE",
+                reviewId, userId
+        );
+        if (rows > 0) log.info("Пользователь {} удалил лайк у отзыва {}", userId, reviewId);
+        return rows > 0;
     }
 
     @Override
-    public void deleteDislike(Long reviewId, Long userId) {
-        String sql = "DELETE FROM review_likes WHERE review_id = ? AND user_id = ? AND is_like = FALSE";
-        jdbcTemplate.update(sql, reviewId, userId);
-        log.info("Пользователь {} удалил дизлайк у отзыва {}", userId, reviewId);
+    public boolean deleteDislike(Long reviewId, Long userId) {
+        int rows = jdbcTemplate.update(
+                "DELETE FROM review_likes WHERE review_id = ? AND user_id = ? AND is_like = FALSE",
+                reviewId, userId
+        );
+        if (rows > 0) log.info("Пользователь {} удалил дизлайк у отзыва {}", userId, reviewId);
+        return rows > 0;
     }
 }

@@ -72,8 +72,13 @@ public class ReviewService {
         getReviewById(reviewId);
         userService.getUserById(userId);
 
-        boolean added = reviewStorage.addLike(reviewId, userId);
-        if (added) {
+        boolean removedDislike = reviewStorage.deleteDislike(reviewId, userId);
+        if (removedDislike) {
+            eventService.createEvent(userId, EventType.REVIEW, Operation.REMOVE, reviewId);
+        }
+
+        boolean addedLike = reviewStorage.addLike(reviewId, userId);
+        if (addedLike) {
             eventService.createEvent(userId, EventType.REVIEW, Operation.ADD, reviewId);
         }
     }
@@ -82,8 +87,13 @@ public class ReviewService {
         getReviewById(reviewId);
         userService.getUserById(userId);
 
-        boolean removed = reviewStorage.addDislike(reviewId, userId);
-        if (removed) {
+        boolean removedLike = reviewStorage.deleteLike(reviewId, userId);
+        if (removedLike) {
+            eventService.createEvent(userId, EventType.REVIEW, Operation.REMOVE, reviewId);
+        }
+
+        boolean addedDislike = reviewStorage.addDislike(reviewId, userId);
+        if (addedDislike) {
             eventService.createEvent(userId, EventType.REVIEW, Operation.ADD, reviewId);
         }
     }
