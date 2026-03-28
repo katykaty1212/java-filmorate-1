@@ -68,7 +68,6 @@ public class UserService {
         }
 
         eventDbStorage.createEvent(userId, EventType.FRIEND, Operation.ADD, friendId);
-        eventDbStorage.createEvent(friendId, EventType.FRIEND, Operation.ADD, userId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
@@ -80,7 +79,6 @@ public class UserService {
         log.info("Пользователь {} удалил из друзей пользователя {}", userId, friendId);
 
         eventDbStorage.createEvent(userId, EventType.FRIEND, Operation.REMOVE, friendId);
-        eventDbStorage.createEvent(friendId, EventType.FRIEND, Operation.REMOVE, userId);
     }
 
     public List<User> getListUserFriend(Long userId) {
