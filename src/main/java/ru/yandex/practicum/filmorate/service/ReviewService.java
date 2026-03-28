@@ -71,15 +71,21 @@ public class ReviewService {
     public void addLike(Long reviewId, Long userId) {
         getReviewById(reviewId);
         userService.getUserById(userId);
-        reviewStorage.addLike(reviewId, userId);
-        eventService.createEvent(userId, EventType.REVIEW, Operation.ADD, reviewId);
+
+        boolean added = reviewStorage.addLike(reviewId, userId);
+        if (added) {
+            eventService.createEvent(userId, EventType.REVIEW, Operation.ADD, reviewId);
+        }
     }
 
     public void addDislike(Long reviewId, Long userId) {
         getReviewById(reviewId);
         userService.getUserById(userId);
-        reviewStorage.addDislike(reviewId, userId);
-        eventService.createEvent(userId, EventType.REVIEW, Operation.ADD, reviewId);
+
+        boolean removed = reviewStorage.addDislike(reviewId, userId);
+        if (removed) {
+            eventService.createEvent(userId, EventType.REVIEW, Operation.ADD, reviewId);
+        }
     }
 
     public void deleteLike(Long reviewId, Long userId) {

@@ -82,15 +82,33 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
     }
 
     @Override
-    public void addLike(Long reviewId, Long userId) {
-        saveReaction(reviewId, userId, true);
+    public boolean addLike(Long reviewId, Long userId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM review_likes WHERE review_id = ? AND user_id = ? AND is_like = TRUE",
+                Integer.class, reviewId, userId
+        );
+        if (count > 0) return false;
+
+        deleteDislike(reviewId, userId);
+
+        jdbcTemplate.update("INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, TRUE)", reviewId, userId);
         log.info("Пользователь {} поставил лайк отзыву {}", userId, reviewId);
+        return true;
     }
 
     @Override
-    public void addDislike(Long reviewId, Long userId) {
-        saveReaction(reviewId, userId, false);
+    public boolean addDislike(Long reviewId, Long userId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM review_likes WHERE review_id = ? AND user_id = ? AND is_like = FALSE",
+                Integer.class, reviewId, userId
+        );
+        if (count > 0) return false;
+
+        deleteLike(reviewId, userId);
+
+        jdbcTemplate.update("INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, FALSE)", reviewId, userId);
         log.info("Пользователь {} поставил дизлайк отзыву {}", userId, reviewId);
+        return true;
     }
 
     @Override
@@ -105,13 +123,5 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
         String sql = "DELETE FROM review_likes WHERE review_id = ? AND user_id = ? AND is_like = FALSE";
         jdbcTemplate.update(sql, reviewId, userId);
         log.info("Пользователь {} удалил дизлайк у отзыва {}", userId, reviewId);
-    }
-
-    private void saveReaction(Long reviewId, Long userId, boolean isLike) {
-        String deleteSql = "DELETE FROM review_likes WHERE review_id = ? AND user_id = ?";
-        jdbcTemplate.update(deleteSql, reviewId, userId);
-
-        String insertSql = "INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?, ?, ?)";
-        update(insertSql, reviewId, userId, isLike);
     }
 }

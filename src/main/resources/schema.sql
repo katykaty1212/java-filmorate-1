@@ -84,11 +84,11 @@ FOREIGN KEY (director_id) REFERENCES directors(director_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS events (
-event_id BIGINT PRIMARY KEY AUTO_INCREMENT, -- primary key
+event_id BIGINT PRIMARY KEY AUTO_INCREMENT,
 time_stamp BIGINT NOT NULL,
 user_id BIGINT NOT NULL,
-event_type VARCHAR(20) NOT NULL, -- одно из значениий LIKE, REVIEW или FRIEND
-operation VARCHAR(20) NOT NULL, -- одно из значениий REMOVE, ADD, UPDATE
+event_type VARCHAR(20) NOT NULL,
+operation VARCHAR(20) NOT NULL,
 entity_id BIGINT NOT NULL,
 FOREIGN KEY (user_id)  REFERENCES users(user_id) ON DELETE CASCADE
 );
