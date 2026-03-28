@@ -40,10 +40,13 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
     }
 
     @Override
-    public void delete(Long reviewId) {
+    public boolean delete(Long reviewId) {
         String sql = "DELETE FROM reviews WHERE review_id = ?";
-        jdbcTemplate.update(sql, reviewId);
-        log.info("Удалён отзыв с ID {}", reviewId);
+        int rows = jdbcTemplate.update(sql, reviewId);
+        if (rows > 0) {
+            log.info("Удалён отзыв с ID {}", reviewId);
+        }
+       return rows > 0;
     }
 
     @Override

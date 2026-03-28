@@ -10,7 +10,7 @@ public interface ReviewStorage {
 
     Review update(Review review);
 
-    void delete(Long reviewId);
+    boolean delete(Long reviewId);
 
     Optional<Review> getReviewById(Long reviewId);
 
