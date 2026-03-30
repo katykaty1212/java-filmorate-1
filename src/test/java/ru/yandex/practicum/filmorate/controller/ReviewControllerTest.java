@@ -79,11 +79,12 @@ public class ReviewControllerTest {
         DirectorDbStorage directorDbStorage = new DirectorDbStorage(jdbcTemplate, directorRowMapper);
         EventDbStorage eventDbStorage = new EventDbStorage(jdbcTemplate, eventRowMapper);
 
+        MPAService mpaService = new MPAService(mpaDbStorage);
         EventService eventService = new EventService(eventDbStorage);
         UserService userService = new UserService(userStorage, eventDbStorage);
         DirectorService directorService = new DirectorService(directorDbStorage);
         FilmService filmService = new FilmService(filmStorage, userService,
-                directorService, mpaDbStorage, genreDbStorage, eventService);
+                directorService, mpaService, genreDbStorage, eventService);
         ReviewService reviewService = new ReviewService(reviewStorage, userService, filmService, eventService);
         RecommendationService recommendationService = new RecommendationService(filmStorage);
 
@@ -109,7 +110,7 @@ public class ReviewControllerTest {
         film.setDuration(120);
 
         MPA mpa = new MPA();
-        mpa.setId(1);
+        mpa.setId(1L);
         film.setMpa(mpa);
 
         return filmController.create(film);

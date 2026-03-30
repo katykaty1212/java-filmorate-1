@@ -78,7 +78,7 @@ public class FilmDbStorageTest {
         film.setDuration(120);
 
         MPA mpa = new MPA();
-        mpa.setId(1);
+        mpa.setId(1L);
         film.setMpa(mpa);
         return film;
     }
