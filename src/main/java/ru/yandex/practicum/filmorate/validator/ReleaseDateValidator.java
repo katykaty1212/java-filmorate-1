@@ -19,12 +19,6 @@ public class ReleaseDateValidator implements ConstraintValidator<ReleaseDate, Lo
         }
 
         LocalDate firstDate = LocalDate.of(1895, 12, 28);
-        LocalDate today = LocalDate.now();
-
-//        if (releaseDate.isBefore(firstDate) || releaseDate.isAfter(today)) {
-//            log.warn("Попытка создать фильм с некорректной датой: {}", releaseDate);
-//            return false;
-//        }
 
         if (releaseDate.isBefore(firstDate)) {
             log.warn("Попытка создать фильм с некорректной датой: {}", releaseDate);

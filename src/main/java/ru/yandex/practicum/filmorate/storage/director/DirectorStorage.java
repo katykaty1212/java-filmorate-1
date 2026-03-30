@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.director;
 import ru.yandex.practicum.filmorate.model.Director;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public interface DirectorStorage {
 
@@ -12,7 +13,7 @@ public interface DirectorStorage {
 
     Director update(Director newDirector);
 
-    Director delete(Long directorId);
+    void delete(Long directorId);
 
-    Director findById(Long directorId);
+    Optional<Director> getDirectorById(Long directorId);
 }

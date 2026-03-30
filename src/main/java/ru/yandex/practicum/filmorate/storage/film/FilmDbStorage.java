@@ -59,23 +59,35 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             String sqlGenres = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
 
-            for (Genre genre : film.getGenres()) {
-                update(sqlGenres, film.getId(), genre.getId());
-            }
+            jdbcTemplate.batchUpdate(
+                    sqlGenres,
+                    film.getGenres(),
+                    film.getGenres().size(),
+                    (ps, genre) -> {
+                        ps.setLong(1, film.getId());
+                        ps.setLong(2, genre.getId());
+                    }
+            );
             log.info("Для фильма ID {} добавлено жанров: {}", id, film.getGenres().size());
         }
 
         if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
             String sqlDirectors = "INSERT INTO film_director (film_id, director_id) VALUES (?, ?)";
 
-            for (Director director : film.getDirectors()) {
-                update(sqlDirectors, film.getId(), director.getId());
-            }
+            jdbcTemplate.batchUpdate(
+                    sqlDirectors,
+                    film.getDirectors(),
+                    film.getDirectors().size(),
+                    (ps, director) -> {
+                        ps.setLong(1, film.getId());
+                        ps.setLong(2, director.getId());
+                    }
+            );
 
             log.info("Для фильма ID {} добавлено режиссеров: {}", id, film.getDirectors().size());
         }
 
-        Film savedFilm = loadFilmData(film);
+        Film savedFilm = loadSingleFilmData(film);
         log.info("Фильм ID {} полностью загружен с MPA и жанрами", id);
 
         return savedFilm;
@@ -107,9 +119,17 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         if (newFilm.getGenres() != null && !newFilm.getGenres().isEmpty()) {
             String insertGenreSql = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
-            for (Genre genre : newFilm.getGenres()) {
-                update(insertGenreSql, newFilm.getId(), genre.getId());
-            }
+
+            jdbcTemplate.batchUpdate(
+                    insertGenreSql,
+                    newFilm.getGenres(),
+                    newFilm.getGenres().size(),
+                    (ps, genre) -> {
+                        ps.setLong(1, newFilm.getId());
+                        ps.setLong(2, genre.getId());
+                    }
+            );
+
             log.info("Для фильма ID {} добавлено жанров: {}", newFilm.getId(), newFilm.getGenres().size());
         } else {
             log.info("Жанры для фильма ID {} удалены", newFilm.getId());
@@ -119,12 +139,19 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         if (newFilm.getDirectors() != null && !newFilm.getDirectors().isEmpty()) {
             String insertDirectorSql = "INSERT INTO film_director (film_id, director_id) VALUES (?, ?)";
-            for (Director director : newFilm.getDirectors()) {
-                jdbcTemplate.update(insertDirectorSql, newFilm.getId(), director.getId());
-            }
+
+            jdbcTemplate.batchUpdate(
+                    insertDirectorSql,
+                    newFilm.getDirectors(),
+                    newFilm.getDirectors().size(),
+                    (ps, director) -> {
+                        ps.setLong(1, newFilm.getId());
+                        ps.setLong(2, director.getId());
+                    }
+            );
         }
 
-        return loadFilmData(newFilm);
+        return loadSingleFilmData(newFilm);
     }
 
     @Override
@@ -139,7 +166,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         List<Film> films = findMany(sql);
         log.info("Получен список всех фильмов.");
 
-        films.forEach(this::loadFilmData);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        loadFilmData(films);
 
         return films;
     }
@@ -152,7 +183,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             Film film = jdbcTemplate.queryForObject(sql, mapper, filmId);
             log.info("Найден фильм с ID: {}", filmId);
 
-            return Optional.of(loadFilmData(film));
+            return Optional.of(loadSingleFilmData(film));
         } catch (EmptyResultDataAccessException e) {
             log.warn("Фильм по ID: {} не найден.", filmId);
             return Optional.empty();
@@ -189,7 +220,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return new HashSet<>(jdbcTemplate.queryForList(sql, Long.class, filmId));
     }
 
-    private MPA mpaLoadById(int mpaId) {
+    private MPA mpaLoadById(Long mpaId) {
         String sql = "SELECT * FROM mpa WHERE mpa_id = ?";
 
         try {
@@ -213,7 +244,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         try {
             List<Film> popularFilmsList = jdbcTemplate.query(sql, mapper, count);
-            popularFilmsList.forEach(this::loadFilmData);
+            if (popularFilmsList.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            loadFilmData(popularFilmsList);
             log.info("Получено {} популярных фильмов", popularFilmsList.size());
 
             return popularFilmsList;
@@ -235,7 +270,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 "ORDER BY likes_count DESC, f.film_id";
 
         List<Film> commonFilms = findMany(sql, userId, friendId);
-        commonFilms.forEach(this::loadFilmData);
+        if (commonFilms.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        loadFilmData(commonFilms);
         return commonFilms;
     }
 
@@ -273,7 +312,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }
     }
 
-    private Film loadFilmData(Film film) {
+    private Film loadSingleFilmData(Film film) {
         MPA mpaFilm = mpaLoadById(film.getMpa().getId());
         film.setMpa(mpaFilm);
 
@@ -286,6 +325,88 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         log.info("Добавлены МРА и жанры.");
 
         return film;
+    }
+
+    private void loadFilmData(List<Film> films) {
+        Set<Long> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+
+        Map<Long, MPA> mpaMap = loadMpaForFilms(films);
+
+        Map<Long, Set<Genre>> genresMap = loadGenresForFilms(filmIds);
+
+        Map<Long, List<Director>> directorsMap = loadDirectorsForFilms(filmIds);
+
+        for (Film film : films) {
+            film.setMpa(mpaMap.get(film.getMpa().getId()));
+            film.setGenres(genresMap.getOrDefault(film.getId(), Set.of()));
+            film.setDirectors(directorsMap.getOrDefault(film.getId(), List.of()));
+        }
+
+        log.info("В фильмы добавлены рейтинги, жанры и режиссеры");
+    }
+
+    private Map<Long, List<Director>> loadDirectorsForFilms(Set<Long> filmIds) {
+        if (filmIds.isEmpty()) {
+            return Map.of();
+        }
+
+        String placeholders = filmIds.stream().map(id -> "?").collect(Collectors.joining(","));
+        String sql = "SELECT fd.film_id, d.* " +
+                "FROM film_director fd " +
+                "JOIN directors d ON fd.director_id = d.director_id " +
+                "WHERE fd.film_id IN (" + placeholders + ")";
+
+        Map<Long, List<Director>> result = new HashMap<>();
+
+        jdbcTemplate.query(sql, rs -> {
+            long filmId = rs.getLong("film_id");
+
+            result.computeIfAbsent(filmId, k -> new ArrayList<>())
+                    .add(directorRowMapper.mapRow(rs, 0));
+        }, filmIds.toArray());
+        return result;
+    }
+
+    private Map<Long, Set<Genre>> loadGenresForFilms(Set<Long> filmIds) {
+        if (filmIds.isEmpty()) {
+            return Map.of();
+        }
+
+        String placeholders = filmIds.stream().map(id -> "?").collect(Collectors.joining(","));
+        String sql = "SELECT fg.film_id, g.* " +
+                "FROM film_genre fg " +
+                "JOIN genres g ON fg.genre_id = g.genre_id " +
+                "WHERE fg.film_id IN (" + placeholders + ")";
+
+        Map<Long, Set<Genre>> result = new HashMap<>();
+
+        jdbcTemplate.query(sql, rs -> {
+            long filmId = rs.getLong("film_id");
+
+            result.computeIfAbsent(filmId, k -> new LinkedHashSet<>())
+                    .add(genreRowMapper.mapRow(rs, 0));
+        }, filmIds.toArray());
+
+        return result;
+    }
+
+    private Map<Long, MPA> loadMpaForFilms(List<Film> films) {
+        Set<Long> mpaIds = films.stream()
+                .map(f -> f.getMpa().getId())
+                .collect(Collectors.toSet());
+
+        if (mpaIds.isEmpty()) {
+            return Map.of();
+        }
+
+        String placeholders = mpaIds.stream().map(id -> "?").collect(Collectors.joining(","));
+        String sql = "SELECT * FROM mpa WHERE mpa_id IN (" + placeholders + ")";
+
+        List<MPA> mpaList = jdbcTemplate.query(sql, mpaRowMapper, mpaIds.toArray());
+
+        return mpaList.stream().collect(Collectors.toMap(MPA::getId, mpa -> mpa));
     }
 
     @Override
@@ -329,7 +450,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         List<Film> films = jdbcTemplate.query(query, mapper, ids.toArray());
 
-        films.forEach(this::loadFilmData);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        loadFilmData(films);
 
         return films;
     }
@@ -355,7 +480,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 "ORDER BY f.release_date ASC";
 
         List<Film> films = findMany(sql, directorId);
-        films.forEach(this::loadFilmData);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        loadFilmData(films);
 
         return films;
     }
@@ -370,7 +499,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 "ORDER BY likes_count DESC";
 
         List<Film> films = findMany(sql, directorId);
-        films.forEach(this::loadFilmData);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        loadFilmData(films);
 
         return films;
     }
@@ -388,10 +521,16 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         try {
             List<Film> popularFilms = jdbcTemplate.query(sql, mapper, genreId, year, count);
-            popularFilms.forEach(this::loadFilmData);
+
+            if (popularFilms.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            loadFilmData(popularFilms);
 
             return popularFilms;
-        } catch (EmptyResultDataAccessException e) {
+
+        } catch (DataAccessException e) {
             log.error("Ошибка при получении популярных фильмов по жанру и году: {}", e.getMessage());
             return Collections.emptyList();
         }
@@ -410,7 +549,12 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         try {
             List<Film> popularFilms = jdbcTemplate.query(sql, mapper, genreId, count);
-            popularFilms.forEach(this::loadFilmData);
+
+            if (popularFilms.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            loadFilmData(popularFilms);
 
             return popularFilms;
         } catch (EmptyResultDataAccessException e) {
@@ -431,7 +575,12 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         try {
             List<Film> popularFilms = jdbcTemplate.query(sql, mapper, year, count);
-            popularFilms.forEach(this::loadFilmData);
+
+            if (popularFilms.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            loadFilmData(popularFilms);
 
             return popularFilms;
         } catch (EmptyResultDataAccessException e) {
@@ -468,7 +617,12 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 """;
 
         List<Film> films = jdbcTemplate.query(sql, mapper, query, query);
-        films.forEach(this::loadFilmData);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        loadFilmData(films);
+
         return films;
     }
 
@@ -485,7 +639,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 """;
 
         List<Film> films = jdbcTemplate.query(sql, mapper, query);
-        films.forEach(this::loadFilmData);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        loadFilmData(films);
         return films;
     }
 
@@ -500,7 +658,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 """;
 
         List<Film> films = jdbcTemplate.query(sql, mapper, query);
-        films.forEach(this::loadFilmData);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        loadFilmData(films);
         return films;
     }
 

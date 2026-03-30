@@ -33,7 +33,7 @@ public class ReviewService {
         if (review.getReviewId() == null) {
             throw new ValidationException("Id отзыва обязателен для обновления");
         }
-        getReviewById(review.getReviewId());
+        validateReviewExists(review.getReviewId());
         validateReview(review);
         Review updated = reviewStorage.update(review);
         eventService.createEvent(updated.getUserId(), EventType.REVIEW, Operation.UPDATE, updated.getReviewId());
@@ -57,6 +57,11 @@ public class ReviewService {
                 });
     }
 
+    public void validateReviewExists(Long reviewId) {
+        reviewStorage.getReviewById(reviewId)
+                .orElseThrow(() -> new NotFoundException("Отзыв с ID " + reviewId + " не найден"));
+    }
+
     public List<Review> getReviews(Long filmId, Integer count) {
         int reviewsCount = count == null ? 10 : count;
 
@@ -65,38 +70,38 @@ public class ReviewService {
         }
 
         if (filmId != null) {
-            filmService.getFilmById(filmId);
+            filmService.validateFilmExists(filmId);
         }
 
         return reviewStorage.getReviews(filmId, reviewsCount);
     }
 
     public void addLike(Long reviewId, Long userId) {
-        getReviewById(reviewId);
-        userService.getUserById(userId);
+        validateReviewExists(reviewId);
+        userService.validateUserExists(userId);
         reviewStorage.addLike(reviewId, userId);
     }
 
     public void addDislike(Long reviewId, Long userId) {
-        getReviewById(reviewId);
-        userService.getUserById(userId);
+        validateReviewExists(reviewId);
+        userService.validateUserExists(userId);
         reviewStorage.addDislike(reviewId, userId);
     }
 
     public void deleteLike(Long reviewId, Long userId) {
-        getReviewById(reviewId);
-        userService.getUserById(userId);
+        validateReviewExists(reviewId);
+        userService.validateUserExists(userId);
         reviewStorage.deleteLike(reviewId, userId);
     }
 
     public void deleteDislike(Long reviewId, Long userId) {
-        getReviewById(reviewId);
-        userService.getUserById(userId);
+        validateReviewExists(reviewId);
+        userService.validateUserExists(userId);
         reviewStorage.deleteDislike(reviewId, userId);
     }
 
     private void validateReview(Review review) {
-        userService.getUserById(review.getUserId());
-        filmService.getFilmById(review.getFilmId());
+        userService.validateUserExists(review.getUserId());
+        filmService.validateFilmExists(review.getFilmId());
     }
 }

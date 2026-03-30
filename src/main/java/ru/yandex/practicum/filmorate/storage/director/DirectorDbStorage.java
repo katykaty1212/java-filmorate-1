@@ -1,13 +1,15 @@
 package ru.yandex.practicum.filmorate.storage.director;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -52,22 +54,24 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
     }
 
     @Override
-    public Director delete(Long directorId) {
-        String sql = "DELETE FROM directors WHERE director_id = ?";
-        Director delDirector = findById(directorId); // проверка существования режиссера
-
-        update(sql, directorId);
-        log.info("Режиссер с ID: {} удален.", directorId);
-
-        return delDirector;
+    public void delete(Long directorId) {
+        jdbcTemplate.update("DELETE FROM directors WHERE director_id = ?", directorId);
     }
 
     @Override
-    public Director findById(Long directorId) {
+    public Optional<Director> getDirectorById(Long directorId) {
         String sql = "SELECT * FROM directors WHERE director_id = ?";
-        return jdbcTemplate.query(sql, directorRowMapper, directorId)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Режиссер с id " + directorId + " не найден"));
+
+        try {
+            Director director = jdbcTemplate.queryForObject(sql, directorRowMapper, directorId);
+            return Optional.of(director);
+        } catch (EmptyResultDataAccessException e) {
+            log.warn("Режиссер по ID: {} не найден.", directorId);
+            return Optional.empty();
+        } catch (DataAccessException e) {
+            log.error("Режиссер при загрузке фильма ID: {}.{}", directorId, e.getMessage());
+            return Optional.empty();
+        }
     }
+
 }

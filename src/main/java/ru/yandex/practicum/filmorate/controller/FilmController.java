@@ -70,19 +70,7 @@ public class FilmController {
             @RequestParam(required = false) Integer genreId,
             @RequestParam(required = false) Integer year) {
 
-        if (genreId != null && year != null) {
-            return filmService.popularFilmsByGenreAndYear(genreId, count, year);
-        }
-
-        if (year != null) {
-            return filmService.popularFilmsByYear(year, count);
-        }
-
-        if (genreId != null) {
-            return filmService.popularFilmsByGenre(genreId, count);
-        }
-
-        return filmService.getPopularFilm((long) count);
+        return filmService.getPopularFilm(count, genreId, year);
     }
 
     @GetMapping("/search")

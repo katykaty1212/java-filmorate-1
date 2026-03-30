@@ -38,7 +38,7 @@ public class UserService {
     }
 
     public void delete(Long userId) {
-        getUserById(userId);
+        validateUserExists(userId);
         userStorage.delete(userId);
     }
 
@@ -50,6 +50,11 @@ public class UserService {
                 });
     }
 
+    public void validateUserExists(Long userId) {
+        userStorage.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
+    }
+
     public void addFriend(Long userId, Long friendId) {
 
         if (userId.equals(friendId)) {
@@ -57,8 +62,8 @@ public class UserService {
             throw new ValidationException("Нельзя добавить себя в друзья");
         }
 
-        getUserById(userId);
-        getUserById(friendId);
+        validateUserExists(userId);
+        validateUserExists(friendId);
 
         try {
             userStorage.addFriend(userId, friendId);
@@ -71,8 +76,8 @@ public class UserService {
     }
 
     public void deleteFriend(Long userId, Long friendId) {
-        getUserById(userId);
-        getUserById(friendId);
+        validateUserExists(userId);
+        validateUserExists(friendId);
         log.info("Попытка пользователя с ID {} удалить из друзей пользователя с ID {}", userId, friendId);
 
         userStorage.deleteFriend(userId, friendId);
@@ -82,13 +87,13 @@ public class UserService {
     }
 
     public List<User> getListUserFriend(Long userId) {
-        getUserById(userId);
+        validateUserExists(userId);
         return userStorage.getUserFriends(userId);
     }
 
     public List<User> getCommonFriends(Long userId, Long otherId) {
-        getUserById(userId);
-        getUserById(otherId);
+        validateUserExists(userId);
+        validateUserExists(otherId);
         log.info("Попытка получить список общих друзей пользователей ID {} и ID {}", userId, otherId);
 
         return userStorage.getCommonFriends(userId, otherId);

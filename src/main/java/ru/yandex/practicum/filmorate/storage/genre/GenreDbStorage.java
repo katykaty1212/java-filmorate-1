@@ -21,11 +21,11 @@ public class GenreDbStorage {
         return jdbcTemplate.query(sql, genreRowMapper);
     }
 
-    public Genre findById(Integer id) {
+    public Genre getGenreById(Long genreId) {
         String sql = "SELECT * FROM genres WHERE genre_id = ?";
-        return jdbcTemplate.query(sql, genreRowMapper, id)
+        return jdbcTemplate.query(sql, genreRowMapper, genreId)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException("Жанр с id " + id + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Жанр с id " + genreId + " не найден"));
     }
 }

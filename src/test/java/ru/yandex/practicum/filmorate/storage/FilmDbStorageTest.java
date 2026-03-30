@@ -105,7 +105,7 @@ public class FilmDbStorageTest {
 
     private void linkFilmDirector(Long filmId, Long directorId) {
         Film film = filmStorage.getFilmById(filmId).orElseThrow();
-        Director director = directorStorage.findById(directorId);
+        Director director = directorStorage.getDirectorById(directorId).orElseThrow();
 
         if (film.getDirectors() == null) {
             film.setDirectors(new ArrayList<>());
@@ -334,7 +334,6 @@ public class FilmDbStorageTest {
         assertTrue(results.stream()
                 .anyMatch(f -> f.getId().equals(directorOnlyFilm.getId())));
     }
-
 
 
     @Test

@@ -75,9 +75,10 @@ public class FilmControllerTest {
         userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
         EventDbStorage eventDbStorage = new EventDbStorage(jdbcTemplate, eventRowMapper);
 
+        MPAService mpaService = new MPAService(mpaDbStorage);
         UserService userService = new UserService(userStorage, eventDbStorage);
         EventService eventService = new EventService(eventDbStorage);
-        FilmService filmService = new FilmService(filmStorage, userService, directorService, mpaDbStorage, genreDbStorage, eventService);
+        FilmService filmService = new FilmService(filmStorage, userService, directorService, mpaService, genreDbStorage, eventService);
         RecommendationService recommendationService = new RecommendationService(filmStorage);
         filmController = new FilmController(filmService);
         userController = new UserController(userService, recommendationService, eventService);
@@ -91,7 +92,7 @@ public class FilmControllerTest {
         film.setDuration(120);
 
         MPA mpa = new MPA();
-        mpa.setId(1);
+        mpa.setId(1L);
         film.setMpa(mpa);
         return film;
     }
@@ -147,7 +148,7 @@ public class FilmControllerTest {
         updatedFilm.setDuration(150);
 
         MPA mpa = new MPA();
-        mpa.setId(1);
+        mpa.setId(1L);
         updatedFilm.setMpa(mpa);
 
         Film resultFilm = filmController.update(updatedFilm);
@@ -210,13 +211,13 @@ public class FilmControllerTest {
 
     @Test
     public void popularFilmsByGenreAndYearTest() {
-        Film film1 = createFilmTest("Драма 2020 много лайков", 2020, List.of(2));
-        Film film2 = createFilmTest("Драма 2020 средне", 2020, List.of(2));
-        Film film3 = createFilmTest("Драма 2021", 2021, List.of(2));
-        Film film4 = createFilmTest("Комедия 2020", 2020, List.of(1));
-        Film film5 = createFilmTest("Драма 2020 без лайков", 2020, List.of(2));
-        Film film6 = createFilmTest("Драма 2019", 2019, List.of(2));
-        Film film7 = createFilmTest("Драма 2020 тоже много", 2020, List.of(2));
+        Film film1 = createFilmTest("Драма 2020 много лайков", 2020, List.of(2L));
+        Film film2 = createFilmTest("Драма 2020 средне", 2020, List.of(2L));
+        Film film3 = createFilmTest("Драма 2021", 2021, List.of(2L));
+        Film film4 = createFilmTest("Комедия 2020", 2020, List.of(1L));
+        Film film5 = createFilmTest("Драма 2020 без лайков", 2020, List.of(2L));
+        Film film6 = createFilmTest("Драма 2019", 2019, List.of(2L));
+        Film film7 = createFilmTest("Драма 2020 тоже много", 2020, List.of(2L));
 
         User user1 = createUserTest("user1");
         User user2 = createUserTest("user2");
@@ -275,10 +276,10 @@ public class FilmControllerTest {
 
     @Test
     public void getPopularFilmsOnlyCountTest() {
-        Film film1 = createFilmTest("Фильм 5 лайков", 2020, List.of(2));
-        Film film2 = createFilmTest("Фильм 3 лайка", 2020, List.of(2));
-        Film film3 = createFilmTest("Фильм 1 лайк", 2020, List.of(2));
-        Film film4 = createFilmTest("Фильм без лайков", 2020, List.of(2));
+        Film film1 = createFilmTest("Фильм 5 лайков", 2020, List.of(2L));
+        Film film2 = createFilmTest("Фильм 3 лайка", 2020, List.of(2L));
+        Film film3 = createFilmTest("Фильм 1 лайк", 2020, List.of(2L));
+        Film film4 = createFilmTest("Фильм без лайков", 2020, List.of(2L));
 
         User user1 = createUserTest("user1");
         User user2 = createUserTest("user2");
@@ -310,10 +311,10 @@ public class FilmControllerTest {
 
     @Test
     public void getPopularFilmsByGenreOnlyTest() {
-        Film comedy = createFilmTest("Комедия", 2020, List.of(1));
-        Film drama1 = createFilmTest("Драма 1", 2020, List.of(2));
-        Film drama2 = createFilmTest("Драма 2", 2020, List.of(2));
-        Film thriller = createFilmTest("Триллер", 2020, List.of(4));
+        Film comedy = createFilmTest("Комедия", 2020, List.of(1L));
+        Film drama1 = createFilmTest("Драма 1", 2020, List.of(2L));
+        Film drama2 = createFilmTest("Драма 2", 2020, List.of(2L));
+        Film thriller = createFilmTest("Триллер", 2020, List.of(4L));
 
         User user1 = createUserTest("user1");
         User user2 = createUserTest("user2");
@@ -332,10 +333,10 @@ public class FilmControllerTest {
 
     @Test
     public void getPopularFilmsByYearOnlyTest() {
-        Film film2020One = createFilmTest("Фильм 2020_1", 2020, List.of(2));
-        Film film2020Two = createFilmTest("Фильм 2020_2", 2020, List.of(2));
-        Film film2021 = createFilmTest("Фильм 2021", 2021, List.of(2));
-        Film film2019 = createFilmTest("Фильм 2019", 2019, List.of(2));
+        Film film2020One = createFilmTest("Фильм 2020_1", 2020, List.of(2L));
+        Film film2020Two = createFilmTest("Фильм 2020_2", 2020, List.of(2L));
+        Film film2021 = createFilmTest("Фильм 2021", 2021, List.of(2L));
+        Film film2019 = createFilmTest("Фильм 2019", 2019, List.of(2L));
 
         User user1 = createUserTest("user1");
         User user2 = createUserTest("user2");
@@ -352,7 +353,7 @@ public class FilmControllerTest {
         }
     }
 
-    private Film createFilmTest(String name, int year, List<Integer> genreIds) {
+    private Film createFilmTest(String name, int year, List<Long> genreIds) {
         Film film = new Film();
         film.setName(name);
         film.setDescription("Description");
@@ -360,11 +361,11 @@ public class FilmControllerTest {
         film.setDuration(120);
 
         MPA mpa = new MPA();
-        mpa.setId(1);
+        mpa.setId(1L);
         film.setMpa(mpa);
 
         Set<Genre> genres = new LinkedHashSet<>();
-        for (Integer id : genreIds) {
+        for (Long id : genreIds) {
             Genre genre = new Genre();
             genre.setId(id);
             genres.add(genre);
