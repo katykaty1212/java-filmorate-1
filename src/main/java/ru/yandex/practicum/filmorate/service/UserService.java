@@ -1,25 +1,27 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserService {
 
     public final UserStorage userStorage;
-
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
+    public final EventDbStorage eventDbStorage;
 
     public Collection<User> findAll() {
         return userStorage.findAll();
@@ -35,8 +37,9 @@ public class UserService {
         return userStorage.update(newUser);
     }
 
-    public User delete(Long userId) {
-        return userStorage.delete(userId);
+    public void delete(Long userId) {
+        validateUserExists(userId);
+        userStorage.delete(userId);
     }
 
     public User getUserById(Long userId) {
@@ -47,6 +50,11 @@ public class UserService {
                 });
     }
 
+    public void validateUserExists(Long userId) {
+        userStorage.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
+    }
+
     public void addFriend(Long userId, Long friendId) {
 
         if (userId.equals(friendId)) {
@@ -54,8 +62,8 @@ public class UserService {
             throw new ValidationException("Нельзя добавить себя в друзья");
         }
 
-        getUserById(userId);
-        getUserById(friendId);
+        validateUserExists(userId);
+        validateUserExists(friendId);
 
         try {
             userStorage.addFriend(userId, friendId);
@@ -63,25 +71,29 @@ public class UserService {
             throw new ValidationException("Пользователь с ID " +
                     friendId + " уже в друзьях у пользователя с ID" + userId);
         }
+
+        eventDbStorage.createEvent(userId, EventType.FRIEND, Operation.ADD, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
-        getUserById(userId);
-        getUserById(friendId);
+        validateUserExists(userId);
+        validateUserExists(friendId);
         log.info("Попытка пользователя с ID {} удалить из друзей пользователя с ID {}", userId, friendId);
 
         userStorage.deleteFriend(userId, friendId);
         log.info("Пользователь {} удалил из друзей пользователя {}", userId, friendId);
+
+        eventDbStorage.createEvent(userId, EventType.FRIEND, Operation.REMOVE, friendId);
     }
 
     public List<User> getListUserFriend(Long userId) {
-        getUserById(userId);
+        validateUserExists(userId);
         return userStorage.getUserFriends(userId);
     }
 
     public List<User> getCommonFriends(Long userId, Long otherId) {
-        getUserById(userId);
-        getUserById(otherId);
+        validateUserExists(userId);
+        validateUserExists(otherId);
         log.info("Попытка получить список общих друзей пользователей ID {} и ID {}", userId, otherId);
 
         return userStorage.getCommonFriends(userId, otherId);

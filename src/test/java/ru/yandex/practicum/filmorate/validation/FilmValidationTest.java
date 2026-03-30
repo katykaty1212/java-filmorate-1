@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate;
+package ru.yandex.practicum.filmorate.validation;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -12,7 +12,8 @@ import ru.yandex.practicum.filmorate.model.MPA;
 import java.time.LocalDate;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FilmValidationTest {
     private Validator validator;
@@ -24,7 +25,7 @@ public class FilmValidationTest {
         validator = factory.getValidator();
 
         MPA mpa = new MPA();
-        mpa.setId(1);
+        mpa.setId(1L);
         mpa.setName("0+");
 
         validFilm = new Film();

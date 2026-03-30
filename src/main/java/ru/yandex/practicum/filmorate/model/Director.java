@@ -4,8 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class MPA {
+public class Director {
     private Long id;
-    @NotBlank
+
+    @NotBlank(message = "Имя режиссера не может быть пустым.")
     private String name;
 }

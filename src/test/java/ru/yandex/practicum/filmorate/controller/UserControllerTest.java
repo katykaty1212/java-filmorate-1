@@ -7,14 +7,26 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.EventService;
+import ru.yandex.practicum.filmorate.service.RecommendationService;
 import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.director.DirectorRowMapper;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventRowMapper;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmRowMapper;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
+import ru.yandex.practicum.filmorate.storage.genre.GenreRowMapper;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaRowMapper;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserRowMapper;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,6 +39,7 @@ public class UserControllerTest {
     @BeforeEach
     void setUp() {
         embeddedDatabase = new EmbeddedDatabaseBuilder()
+                .generateUniqueName(true)
                 .setType(EmbeddedDatabaseType.H2)
                 .addScript("classpath:schema.sql")
                 .addScript("classpath:data.sql")
@@ -45,11 +58,22 @@ public class UserControllerTest {
         jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN user_id RESTART WITH 1");
 
         UserRowMapper userRowMapper = new UserRowMapper();
+        FilmRowMapper filmRowMapper = new FilmRowMapper();
+        MpaRowMapper mpaRowMapper = new MpaRowMapper();
+        GenreRowMapper genreRowMapper = new GenreRowMapper();
         FriendshipRowMapper friendshipRowMapper = new FriendshipRowMapper();
+        DirectorRowMapper directorRowMapper = new DirectorRowMapper();
+        EventRowMapper eventRowMapper = new EventRowMapper();
 
         UserDbStorage userStorage = new UserDbStorage(jdbcTemplate, userRowMapper, friendshipRowMapper);
-        UserService userService = new UserService(userStorage);
-        userController = new UserController(userService);
+        FilmStorage filmStorage = new FilmDbStorage(
+                jdbcTemplate, filmRowMapper, mpaRowMapper, genreRowMapper, directorRowMapper);
+        EventDbStorage eventDbStorage = new EventDbStorage(jdbcTemplate, eventRowMapper);
+
+        UserService userService = new UserService(userStorage, eventDbStorage);
+        RecommendationService recommendationService = new RecommendationService(filmStorage);
+        EventService eventService = new EventService(eventDbStorage);
+        userController = new UserController(userService, recommendationService, eventService);
     }
 
     @AfterEach
@@ -173,4 +197,37 @@ public class UserControllerTest {
             userController.getUserById(createdUser.getId());
         });
     }
+
+    @Test
+    public void getRecommendationsTest() {
+        User user1 = createTestUser("user1@mail.ru", "user1login", "User One");
+        User user2 = createTestUser("user2@mail.ru", "user2login", "User Two");
+
+        user1 = userController.create(user1);
+        user2 = userController.create(user2);
+
+        Long userId1 = user1.getId();
+        Long userId2 = user2.getId();
+
+        jdbcTemplate.update("INSERT INTO FILMS (FILM_ID, NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) VALUES (?, ?, ?, ?, ?, ?)",
+                1L, "Film 1", "Desc 1", java.sql.Date.valueOf("2020-01-01"), 100, 1);
+        jdbcTemplate.update("INSERT INTO FILMS (FILM_ID, NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) VALUES (?, ?, ?, ?, ?, ?)",
+                2L, "Film 2", "Desc 2", java.sql.Date.valueOf("2020-01-01"), 120, 1);
+        jdbcTemplate.update("INSERT INTO FILMS (FILM_ID, NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) VALUES (?, ?, ?, ?, ?, ?)",
+                3L, "Film 3", "Desc 3", java.sql.Date.valueOf("2020-01-01"), 90, 1);
+
+        jdbcTemplate.update("INSERT INTO LIKES (USER_ID, FILM_ID) VALUES (?, ?)", userId1, 1L);
+        jdbcTemplate.update("INSERT INTO LIKES (USER_ID, FILM_ID) VALUES (?, ?)", userId1, 2L);
+
+        jdbcTemplate.update("INSERT INTO LIKES (USER_ID, FILM_ID) VALUES (?, ?)", userId2, 2L);
+        jdbcTemplate.update("INSERT INTO LIKES (USER_ID, FILM_ID) VALUES (?, ?)", userId2, 3L);
+
+        List<Film> recommendations = userController.getRecommendations(userId1);
+
+        assertNotNull(recommendations);
+        assertEquals(1, recommendations.size());
+        assertEquals(3L, recommendations.get(0).getId());
+        assertEquals("Film 3", recommendations.get(0).getName());
+    }
+
 }

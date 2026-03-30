@@ -9,7 +9,9 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.BaseDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.friendship.FriendshipRowMapper;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 @Component
 @Qualifier("userDbStorage")
@@ -85,14 +87,8 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     }
 
     @Override
-    public User delete(Long userId) {
-        String sql = "DELETE FROM users WHERE user_id = ?";
-        User user = getUserById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден."));
-
-        update(sql, userId);
-        log.info("Удалён пользователь с ID: {}", userId);
-        return user;
+    public void delete(Long userId) {
+        jdbcTemplate.update("DELETE FROM users WHERE user_id = ?", userId);
     }
 
     @Override
